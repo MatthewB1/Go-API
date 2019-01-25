@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
-
+	"html"
+	"net/http"
 	// "encoding/json"
+	
 	// "github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
-    // "github.com/mongodb/mongo-go-driver/mongo/options"
+	// "github.com/mongodb/mongo-go-driver/mongo/options"
+	"github.com/gorilla/mux"
 )
 
 type User struct {
@@ -22,6 +25,14 @@ var collection *mongo.Collection
 
 
 func init(){
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+    })
+
+    log.Fatal(http.ListenAndServe(":8080", nil))
+
+
+
 	var err error
 	client, err = mongo.Connect(context.TODO(), "mongodb://localhost:27017")
 	if err != nil{log.Fatal(err)}
@@ -51,5 +62,9 @@ func deleteUsers() error{
 
 
 func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+    })
 
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }
