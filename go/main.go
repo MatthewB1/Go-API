@@ -11,7 +11,7 @@ import (
 	// "github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
 	// "github.com/mongodb/mongo-go-driver/mongo/options"
-	"github.com/gorilla/mux"
+	// "github.com/gorilla/mux"
 )
 
 type User struct {
@@ -62,9 +62,12 @@ func deleteUsers() error{
 
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-    })
-
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	// r := mux.NewRouter()
+	// r.HandleFunc("/users", userHandler)
+	/*
+		figure out how to create handlers, and use them as middleware
+		mux should support all of this
+		reference express model for functionality required
+		ignore sessions for now
+	*/
 }
