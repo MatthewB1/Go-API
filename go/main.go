@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"html"
+	// "html"
 	"net/http"
 	// "encoding/json"
 	
 	// "github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
 	// "github.com/mongodb/mongo-go-driver/mongo/options"
-	// "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 )
 
 type User struct {
@@ -25,18 +25,24 @@ var collection *mongo.Collection
 
 
 func init(){
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-    })
+	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    //     fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	// })
+	
+	
+	r := mux.NewRouter()
+	// s := r.PathPrefix("/users").Subrouter()
+	r.HandleFunc("/users", userHandler)
 
-    log.Fatal(http.ListenAndServe(":8080", nil))
+    log.Fatal(http.ListenAndServe(":8080", r))
 
 
-
+	//*************DB connection setup*****************************
 	var err error
 	client, err = mongo.Connect(context.TODO(), "mongodb://localhost:27017")
 	if err != nil{log.Fatal(err)}
 	collection = client.Database("db").Collection("users")
+	//*************************************************************
 }
 
 func addUser(user User) error{
@@ -55,19 +61,23 @@ func deleteUsers() error{
 		log.Fatal(err)
 	}
 
-	fmt.Println("Deleted a%v documents in collection \"users\"", res.DeletedCount);
+	fmt.Printf("Deleted a%v documents in collection \"users\"", res.DeletedCount);
 
 	return err 
 }
 
 
 func main() {
-	// r := mux.NewRouter()
-	// r.HandleFunc("/users", userHandler)
 	/*
 		figure out how to create handlers, and use them as middleware
 		mux should support all of this
 		reference express model for functionality required
 		ignore sessions for now
 	*/
+}
+
+func userHandler(w http.ResponseWriter, req *http.Request) {
+	fmt.Printf("userHandler hit!")
+	fmt.Fprintf(w,"userHandler hit!")
+	//code...
 }
