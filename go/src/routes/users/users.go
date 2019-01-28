@@ -11,27 +11,31 @@ import (
 
 func SubRouter(router *mux.Router){
 	subr := router.PathPrefix("/users").Subrouter()
-	subr.HandleFunc("/addUser", addUser).Methods("GET")
+	subr.HandleFunc("/addUser", addUser).Methods("POST")
 	subr.HandleFunc("/getUser/{id}", getUser).Methods("GET")
 	subr.HandleFunc("/deleteUser/{id}", deleteUser).Methods("DELETE")
 	subr.HandleFunc("editUser/{id}", editUser).Methods("PUT")
 
-	subr.HandleFunc("/deleteAll", deleteAll).Methods("DELETE")
+	subr.HandleFunc("/deleteUsers", deleteUsers).Methods("DELETE")
 	subr.HandleFunc("/getAll", getAll).Methods("GET")
 	subr.HandleFunc("/", def).Methods("GET")
+
 }
 
+
+
 func addUser(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("passed to addUser handler...")
 	user := &data.User{Username: "test", Password: "test", AccessLevel: "test"}
 	
 	responseCode := data.AddUser(user)
 
 	if responseCode == 0 {
 		//return good
-		fmt.Fprintf(w, "Created new user")
+		w.WriteHeader(http.StatusOK)
 	} else {
 		//return bad
-		fmt.Fprintf(w, "Error creating new user!")
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
@@ -47,7 +51,7 @@ func editUser(w http.ResponseWriter, req *http.Request) {
 	//code...
 }
 
-func deleteAll(w http.ResponseWriter, req *http.Request) {
+func deleteUsers(w http.ResponseWriter, req *http.Request) {
 	responseCode := data.DeleteUsers()
 
 	if responseCode == 0 {
@@ -67,3 +71,5 @@ func def(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w,"userHandler hit!")
 	//code...
 }
+
+

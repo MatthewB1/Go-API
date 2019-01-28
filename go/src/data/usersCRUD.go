@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/mongodb/mongo-go-driver/mongo"
+	"github.com/mongodb/mongo-go-driver/bson"
 )
 
 
@@ -27,12 +28,13 @@ func AddUser(record *User) int{
 }
 
 func DeleteUsers() int{
-	res,err := usersCollection.DeleteMany(context.TODO(), nil)
+													//empty bson object is like a wildcard
+	res,err := usersCollection.DeleteMany(context.TODO(), bson.M{})
 	if  err != nil{
-		fmt.Println("error deleting records")
+		fmt.Println("error deleting records: ", err)
 		return 1
 	} else {
-		fmt.Printf("Deleted a%v documents in collection \"users\"", res.DeletedCount)
+		fmt.Printf("Deleted %v documents in collection \"users\"", res.DeletedCount)
 		return 0
 	}
 }
@@ -44,7 +46,7 @@ func DeleteUsers() int{
 	subr.HandleFunc("/deleteUser/{id}", deleteUser).Methods("DELETE")
 	subr.HandleFunc("editUser/{id}", editUser).Methods("PUT")
 
-	subr.HandleFunc("/deleteAll", deleteAll).Methods("DELETE")
+	subr.HandleFunc("/deleteUsers", deleteAll).Methods("DELETE")
 	subr.HandleFunc("/getAll", getAll).Methods("GET")
 	subr.HandleFunc("/", def).Methods("GET")
 */
