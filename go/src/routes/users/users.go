@@ -3,19 +3,11 @@ package users
 import (
 	"net/http"
 	"fmt"
-	// "data/DataAccess"
-	
-	"encoding/json"
-	
+	"data"
+	// "encoding/json"
 	
 	"github.com/gorilla/mux"
 )
-
-type User struct {
-	Username   string	`json:"username"`
-	Password   string	`json:"password"`
-	AccessLevel string	`json:"accessLevel"`
-}
 
 func SubRouter(router *mux.Router){
 	subr := router.PathPrefix("/users").Subrouter()
@@ -30,14 +22,17 @@ func SubRouter(router *mux.Router){
 }
 
 func addUser(w http.ResponseWriter, req *http.Request) {
-	user := &User{Username: "test", Password: "test", AccessLevel: "test"}
-	jsonUser,err := json.Marshal(user)
-	if err != nil {
-        fmt.Fprintf(w, "Error: %s", err)
-    }
+	user := &data.User{Username: "test", Password: "test", AccessLevel: "test"}
+	
+	responseCode := data.AddUser(user)
 
-	fmt.Fprintf(w, "%T", jsonUser)
-
+	if responseCode == 0 {
+		//return good
+		fmt.Fprintf(w, "Created new user")
+	} else {
+		//return bad
+		fmt.Fprintf(w, "Error creating new user!")
+	}
 }
 
 func getUser(w http.ResponseWriter, req *http.Request) {
@@ -53,7 +48,15 @@ func editUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func deleteAll(w http.ResponseWriter, req *http.Request) {
-	//code...
+	responseCode := data.DeleteUsers()
+
+	if responseCode == 0 {
+		//return good
+		fmt.Fprintf(w, "Deleted all users")
+	} else {
+		//return bad
+		fmt.Fprintf(w, "Error deleting all users!")
+	}
 }
 
 func getAll(w http.ResponseWriter, req *http.Request) {
