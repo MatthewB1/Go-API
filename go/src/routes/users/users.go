@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"fmt"
 	"data"
-	// "encoding/json"
+	"encoding/json"
 	
 	"github.com/gorilla/mux"
 )
@@ -40,7 +40,21 @@ func addUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func getUser(w http.ResponseWriter, req *http.Request) {
-	//code...
+	fmt.Println("passed to getUser handler...")
+
+	user,responseCode := data.GetUser("5c50499b1777d4d0a4414393")
+
+	jsonUser, err := json.Marshal(&user)
+
+	if responseCode == 0{
+		//return good
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonUser)
+		//add user as json structure to body?
+	} else {
+		//return bad
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }
 
 func deleteUser(w http.ResponseWriter, req *http.Request) {

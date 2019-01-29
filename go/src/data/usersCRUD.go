@@ -39,6 +39,21 @@ func DeleteUsers() int{
 	}
 }
 
+// func GetUser(id string) *User int{
+
+// 	filter := bson.D{{"_id":, id}}
+
+// 	var result User
+
+// 	err := usersCollection.FindOne(context.TODO(), filter).Decode(&result)
+// 	if err != nil{
+// 		fmt.Println("error finding user: ", err)
+// 		return result, 1
+// 	} else {
+// 		fmt.Printf("Found user in collection \"users\": ", result._id)
+// 	}
+// }
+
 
 /*
 	subr.HandleFunc("/addUser", addUser).Methods("GET")
