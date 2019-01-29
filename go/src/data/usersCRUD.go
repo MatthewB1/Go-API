@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
+
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/bson"
 )
@@ -17,18 +18,59 @@ func defineUsersCollection(client *mongo.Client){
 
 //********************User CRUD operations**********************
 func AddUser(record *User) int{
-	res, err := usersCollection.InsertOne(context.TODO(), record)
+	_, err := usersCollection.InsertOne(context.TODO(), record)
 	if err != nil {
-		fmt.Println("error inserting record")
+		fmt.Println(err)
 		return 1
 	} else{
-	fmt.Println("Inserted document: ", res.InsertedID)
-	return 0
+		return 0
 	}
 }
 
-func DeleteUsers() int{
-													//empty bson object is like a wildcard
+func GetUser(username string) *User{
+	filter := bson.M{"username":username}
+
+	var result User
+
+	err := usersCollection.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil{
+		fmt.Println(err)
+		return &result
+	} else {
+		return &result
+	}
+}
+
+func DeleteUser(username string) int{
+	filter := bson.M{"username":username}
+
+	_, err := usersCollection.DeleteOne(context.TODO(), filter)
+	if err != nil{
+		fmt.Println(err)
+		return 1
+	} else {
+		return 0
+	}
+}
+
+func EditUser(new *User) int{
+	filter := bson.M{"username":new.Username}
+
+	update:= bson.D{{"$set", bson.M{
+						"username" : new.Username,
+						"password" : new.Password,
+						"accessLevel" : new.AccessLevel}}}
+
+	_, err := usersCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		fmt.Println(err)
+		return 1
+	} else{
+		return 0
+	}
+}
+
+func DeleteUsers() int{								//empty bson object is like a wildcard
 	res,err := usersCollection.DeleteMany(context.TODO(), bson.M{})
 	if  err != nil{
 		fmt.Println("error deleting records: ", err)
@@ -39,29 +81,23 @@ func DeleteUsers() int{
 	}
 }
 
-// func GetUser(id string) *User int{
+func GetUsers() *[]User{
+	var users []User
 
-// 	filter := bson.D{{"_id":, id}}
 
-// 	var result User
 
-// 	err := usersCollection.FindOne(context.TODO(), filter).Decode(&result)
-// 	if err != nil{
-// 		fmt.Println("error finding user: ", err)
-// 		return result, 1
-// 	} else {
-// 		fmt.Printf("Found user in collection \"users\": ", result._id)
-// 	}
-// }
+
+	return &users
+}
 
 
 /*
-	subr.HandleFunc("/addUser", addUser).Methods("GET")
-	subr.HandleFunc("/getUser/{id}", getUser).Methods("GET")
-	subr.HandleFunc("/deleteUser/{id}", deleteUser).Methods("DELETE")
-	subr.HandleFunc("editUser/{id}", editUser).Methods("PUT")
+	subr.HandleFunc("/addUser?", addUser).Methods("POST")
+	subr.HandleFunc("/getUser?", getUser).Methods("GET")
+	subr.HandleFunc("/deleteUser?", deleteUser).Methods("DELETE")
+	subr.HandleFunc("editUser?", editUser).Methods("PUT")
 
 	subr.HandleFunc("/deleteUsers", deleteAll).Methods("DELETE")
-	subr.HandleFunc("/getAll", getAll).Methods("GET")
+	subr.HandleFunc("/getUsers", getAll).Methods("GET")
 	subr.HandleFunc("/", def).Methods("GET")
 */

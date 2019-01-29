@@ -12,22 +12,25 @@ import (
 func SubRouter(router *mux.Router){
 	subr := router.PathPrefix("/users").Subrouter()
 	subr.HandleFunc("/addUser", addUser).Methods("POST")
-	subr.HandleFunc("/getUser/{id}", getUser).Methods("GET")
-	subr.HandleFunc("/deleteUser/{id}", deleteUser).Methods("DELETE")
-	subr.HandleFunc("editUser/{id}", editUser).Methods("PUT")
+	subr.HandleFunc("/getUser", getUser).Methods("GET")
+	subr.HandleFunc("/deleteUser", deleteUser).Methods("DELETE")
+	subr.HandleFunc("/editUser", editUser).Methods("PUT")
 
 	subr.HandleFunc("/deleteUsers", deleteUsers).Methods("DELETE")
 	subr.HandleFunc("/getAll", getAll).Methods("GET")
 	subr.HandleFunc("/", def).Methods("GET")
-
 }
 
 
 
 func addUser(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("passed to addUser handler...")
-	user := &data.User{Username: "test", Password: "test", AccessLevel: "test"}
 	
+	//build object from request
+	user := &data.User{
+		Username: req.FormValue("username"), 
+		Password: req.FormValue("password"),
+		AccessLevel: req.FormValue("accessLevel")}
+
 	responseCode := data.AddUser(user)
 
 	if responseCode == 0 {
@@ -40,17 +43,14 @@ func addUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func getUser(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("passed to getUser handler...")
 
-	user,responseCode := data.GetUser("5c50499b1777d4d0a4414393")
+	user := data.GetUser(req.FormValue("username"))
 
-	jsonUser, err := json.Marshal(&user)
-
-	if responseCode == 0{
+	if user != nil{
 		//return good
 		w.WriteHeader(http.StatusOK)
-		w.Write(jsonUser)
-		//add user as json structure to body?
+		//return user as json
+		json.NewEncoder(w).Encode(user)
 	} else {
 		//return bad
 		w.WriteHeader(http.StatusBadRequest)
@@ -58,11 +58,33 @@ func getUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func deleteUser(w http.ResponseWriter, req *http.Request) {
-	//code...
+	responseCode := data.DeleteUser(req.FormValue("username"))
+
+	if responseCode == 0{
+		//return good
+		w.WriteHeader(http.StatusOK)
+	} else {
+		//return bad
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }
 
 func editUser(w http.ResponseWriter, req *http.Request) {
-	//code...
+	//build object from request
+	user := &data.User{
+		Username: req.FormValue("username"), 
+		Password: req.FormValue("password"),
+		AccessLevel: req.FormValue("accessLevel")}
+
+	responseCode := data.EditUser(user)
+
+	if responseCode == 0 {
+		//return good
+		w.WriteHeader(http.StatusOK)
+	} else {
+		//return bad
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }
 
 func deleteUsers(w http.ResponseWriter, req *http.Request) {
