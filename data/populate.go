@@ -11,6 +11,7 @@ func main(){
 	client, err := mongo.Connect(context.TODO(), "mongodb://localhost:27017")
 	if err != nil{log.Fatal(err)}
 
+	//insert users
 	usersCollection := client.Database("db").Collection("users")
 
 	matthew := &User{Username: "Matthew", Password: "admin", AccessLevel: "admin"}
@@ -27,6 +28,8 @@ func main(){
 
 	fmt.Println("Inserted multiple documents: ", insertManyResult.InsertedIDs)
 
+	//inser teams
+	//code to insert teams...
 }
 
 

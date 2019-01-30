@@ -100,12 +100,23 @@ func deleteUsers(w http.ResponseWriter, req *http.Request) {
 }
 
 func getAll(w http.ResponseWriter, req *http.Request) {
-	//code...
+	users := data.GetUsers()
+
+	if len(*users) > 0{
+		//return good
+		w.WriteHeader(http.StatusOK)
+		//return user as json
+		for _, user := range *users{
+			json.NewEncoder(w).Encode(user)
+		}
+	} else {
+		//return bad
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }
 
 func def(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w,"userHandler hit!")
-	//code...
 }
 
 

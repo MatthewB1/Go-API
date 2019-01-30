@@ -20,5 +20,7 @@ type User struct {
 }
 */
 type Team struct {
-
+    TeamName string `json:"teamName"`
+    TeamLeader string `json:"teamLeader"`
+    TeamMembers []string `json:"teamMembers"`
 }

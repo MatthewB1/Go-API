@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
+	"github.com/mongodb/mongo-go-driver/mongo/options"
 	"github.com/mongodb/mongo-go-driver/bson"
 )
 
@@ -84,9 +85,21 @@ func DeleteUsers() int{								//empty bson object is like a wildcard
 func GetUsers() *[]User{
 	var users []User
 
-
-
-
+	cursor, err := usersCollection.Find(context.TODO(),  bson.M{}, options.Find())
+	defer cursor.Close(context.TODO())
+	if err != nil {
+		fmt.Println(err)
+	} else{
+		var elem User
+		for cursor.Next(context.TODO()) {
+			err := cursor.Decode(&elem)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				users = append(users, elem)
+			}
+		}
+	}
 	return &users
 }
 
