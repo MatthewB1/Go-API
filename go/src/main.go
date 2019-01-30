@@ -3,6 +3,7 @@ package main
 import (
 	"routes/users"
 	"routes/teams"
+	"routes/auth"
 
 	"log"
 	"fmt"
@@ -14,6 +15,9 @@ func main() {
 	router := mux.NewRouter()
 	users.SubRouter(router)
 	teams.SubRouter(router)
+
+
+	auth.SubRouter(router)
 	
 	//use middleware functions
 	router.Use(headerMW)

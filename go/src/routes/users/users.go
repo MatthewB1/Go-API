@@ -2,7 +2,6 @@ package users
 
 import (
 	"net/http"
-	"fmt"
 	"data"
 	"encoding/json"
 	
@@ -11,14 +10,14 @@ import (
 
 func SubRouter(router *mux.Router){
 	subr := router.PathPrefix("/users").Subrouter()
-	subr.HandleFunc("/addUser", addUser).Methods("POST")
-	subr.HandleFunc("/getUser", getUser).Methods("GET")
-	subr.HandleFunc("/deleteUser", deleteUser).Methods("DELETE")
-	subr.HandleFunc("/editUser", editUser).Methods("PUT")
 
-	subr.HandleFunc("/deleteUsers", deleteUsers).Methods("DELETE")
-	subr.HandleFunc("/getAll", getAll).Methods("GET")
-	subr.HandleFunc("/", def).Methods("GET")
+	subr.HandleFunc("/user", addUser).Methods("POST")
+	subr.HandleFunc("/user", getUser).Methods("GET")
+	subr.HandleFunc("/user", deleteUser).Methods("DELETE")
+	subr.HandleFunc("/user", editUser).Methods("PUT")
+
+	subr.HandleFunc("/users", deleteUsers).Methods("DELETE")
+	subr.HandleFunc("/users", getAll).Methods("GET")
 }
 
 
@@ -92,10 +91,10 @@ func deleteUsers(w http.ResponseWriter, req *http.Request) {
 
 	if responseCode == 0 {
 		//return good
-		fmt.Fprintf(w, "Deleted all users")
+		w.WriteHeader(http.StatusOK)
 	} else {
 		//return bad
-		fmt.Fprintf(w, "Error deleting all users!")
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
@@ -114,9 +113,3 @@ func getAll(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 }
-
-func def(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w,"userHandler hit!")
-}
-
-

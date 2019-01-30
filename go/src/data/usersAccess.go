@@ -28,15 +28,23 @@ func AddUser(record *User) int{
 	}
 }
 
-func GetUser(username string) *User{
-	filter := bson.M{"username":username}
+func GetUser(strings ...string) *User{
+
+	var filter bson.M
+
+	if len(strings) == 1{
+		filter = bson.M{"username":strings[0]}
+	}
+	if len(strings) == 2{
+		filter = bson.M{"username":strings[0], "password":strings[1]}
+	}
 
 	var result User
 
 	err := usersCollection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil{
 		fmt.Println(err)
-		return &result
+		return nil
 	} else {
 		return &result
 	}
