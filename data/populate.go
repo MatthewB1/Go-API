@@ -5,6 +5,8 @@ import (
 	"context"
 	"log"
 	"github.com/mongodb/mongo-go-driver/mongo"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 func main(){
@@ -28,9 +30,12 @@ func main(){
 
 	fmt.Println("Inserted multiple documents: ", insertManyResult.InsertedIDs)
 
-	//inser teams
-	//code to insert teams...
+	//insert teams
+	
+	// teamsCollection := client.Database9("db").Collection("teams")
 }
+
+
 
 
 
@@ -52,6 +57,8 @@ func main(){
 
 
 //******************************data models****************************
+
+
 /*
 {
     "username": "",
@@ -60,6 +67,7 @@ func main(){
 }
 */
 type User struct {
+    // ID      bson.ObjectId `bson:"_id,omitempty"`
 	Username   string	`json:"username"`
 	Password   string	`json:"password"`
 	AccessLevel string	`json:"accessLevel"`
@@ -72,5 +80,8 @@ type User struct {
 }
 */
 type Team struct {
-
+    // ID      bson.ObjectId `bson:"_id,omitempty"`
+    Teamname string `json:"teamname"`
+    Teamleader string `json:"teamleader"`
+    TeamMembers []User `json:"teamMembers"`
 }

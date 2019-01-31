@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
+	// "encoding/json"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/options"
@@ -55,13 +56,11 @@ func DeleteTeam(teamname string) int{
 }
 
 func EditTeam(new *Team) int{
-	fmt.Println(len(new.TeamMembers))
 	filter := bson.M{"teamname":new.Teamname}
 
-	update:= bson.D{{"$set", bson.M{
-						"teamname" : new.Teamname,
-						"teamleader" : new.Teamleader,
-						"teamMembers" : new.TeamMembers}}}
+	jsonNew, _ := bson.Marshal(new)
+
+	update := bson.D{{"$set", jsonNew}}
 
 	_, err := teamsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {

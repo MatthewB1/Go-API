@@ -33,7 +33,10 @@ func addTeam(w http.ResponseWriter, req *http.Request) {
 	usernames := strings.Split(req.FormValue("teamMembers"), ",")
 
 	for _, username := range usernames {
-		users = append(users, *data.GetUser(username))
+		userPointer := data.GetUser(username)
+		if userPointer != nil{
+			users = append(users, *userPointer)
+		}
 	}
 
 	team := &data.Team{
@@ -99,9 +102,7 @@ func editTeam(w http.ResponseWriter, req *http.Request) {
 	if responseCode == 0 {
 		//return good
 		w.WriteHeader(http.StatusOK)
-		for _, user := range team.TeamMembers{
-			json.NewEncoder(w).Encode(user)
-		}
+		json.NewEncoder(w).Encode(team)
 
 	} else {
 		//return bad
