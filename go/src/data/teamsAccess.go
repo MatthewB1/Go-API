@@ -58,14 +58,16 @@ func DeleteTeam(teamname string) int{
 func EditTeam(new *Team) int{
 	filter := bson.M{"teamname":new.Teamname}
 
-	jsonNew, _ := bson.Marshal(new)
+	
+	update := bson.D{{"$set", bson.M{"teamname":new.Teamname,"teamleader":new.Teamleader,"teamMembers":new.TeamMembers}}}
 
-	update := bson.D{{"$set", jsonNew}}
+	//doesn't store changes to users[] in team :~(
 
 	_, err := teamsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		fmt.Println(err)
 		return 1
+
 	} else{
 		return 0
 	}
