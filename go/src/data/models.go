@@ -2,6 +2,8 @@ package data
 
 import (
     // "gopkg.in/mgo.v2/bson"
+    
+	// "github.com/mongodb/mongo-go-driver/bson"
 )
 
 /*
@@ -28,5 +30,5 @@ type Team struct {
     // ID      bson.ObjectId `bson:"_id,omitempty"`
     Teamname string `json:"teamname"`
     Teamleader string `json:"teamleader"`
-    TeamMembers []User `json:"teamMembers"`
+    TeamMembers []User`json:"teamMembers"`
 }

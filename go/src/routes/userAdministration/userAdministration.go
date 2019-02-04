@@ -9,7 +9,7 @@ import (
 )
 
 func SubRouter(router *mux.Router){
-	subr := router.PathPrefix("/users").Subrouter()
+	subr := router.PathPrefix("/api/userAdministration").Subrouter()
 
 	subr.HandleFunc("/user", addUser).Methods("POST")
 	subr.HandleFunc("/user", getUser).Methods("GET")

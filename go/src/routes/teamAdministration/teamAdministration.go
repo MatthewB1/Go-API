@@ -11,7 +11,7 @@ import (
 )
 
 func SubRouter(router *mux.Router){
-	subr := router.PathPrefix("/teams").Subrouter()
+	subr := router.PathPrefix("/api/teamAdministration").Subrouter()
 
 	subr.HandleFunc("/team", addTeam).Methods("POST")
 	subr.HandleFunc("/team", getTeam).Methods("GET")

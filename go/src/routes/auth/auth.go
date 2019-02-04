@@ -10,7 +10,7 @@ import (
 )
 
 func SubRouter(router *mux.Router){
-	subr := router.PathPrefix("/auth").Subrouter()
+	subr := router.PathPrefix("/api/auth").Subrouter()
 
 	subr.HandleFunc("/login", login).Methods("GET")
 	subr.HandleFunc("/accessLevel", getAccessLevel).Methods("GET")
