@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/options"
@@ -34,7 +33,6 @@ func GetTeam(teamname string) (*Team, error){
 
 	err := teamsCollection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil{
-		fmt.Println(err)
 		return nil, err
 	} else {
 		return &result, nil
@@ -47,7 +45,6 @@ func DeleteTeam(teamname string) error{
 	_, err := teamsCollection.DeleteOne(context.TODO(), filter)
 
 	if err != nil{
-		fmt.Println(err)
 		return err
 	} else {
 		return nil
@@ -91,7 +88,6 @@ func GetTeams() (*[]Team, error){
 		for cursor.Next(context.TODO()) {
 			err := cursor.Decode(&elem)
 			if err != nil {
-				fmt.Println(err)
 				return &teams, err
 			} else {
 				teams = append(teams, elem)

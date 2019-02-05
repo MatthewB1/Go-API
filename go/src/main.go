@@ -3,6 +3,8 @@ package main
 import (
 	"routes/userAdministration"
 	"routes/teamAdministration"
+	"routes/projectAdministration"
+	"routes/fileAdministration"
 	"routes/auth"
 	"middleware"
 
@@ -17,9 +19,12 @@ import (
 func main() {
 	router := mux.NewRouter()
 
-	users.SubRouter(router)
-	teams.SubRouter(router)
+	userAdministration.SubRouter(router)
+	teamAdministration.SubRouter(router)
+	fileAdministration.SubRouter(router)
+	projectAdministration.SubRouter(router)
 	auth.SubRouter(router)
+
 
 	//attach middleware
 	middleware.AttachMiddleware(router)

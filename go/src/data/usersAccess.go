@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/options"
@@ -49,7 +48,6 @@ func GetUser(strings ...string) (*User, error){
 	// if decerr != nil {fmt.Println("error decoding")} 
 
 	if err != nil{
-		fmt.Println(err)
 		return nil, err
 	} else {
 		return &result, nil
@@ -112,15 +110,3 @@ func GetUsers() (*[]User, error){
 	}
 	return &users, err
 }
-
-
-/*
-	subr.HandleFunc("/addUser?", addUser).Methods("POST")
-	subr.HandleFunc("/getUser?", getUser).Methods("GET")
-	subr.HandleFunc("/deleteUser?", deleteUser).Methods("DELETE")
-	subr.HandleFunc("editUser?", editUser).Methods("PUT")
-
-	subr.HandleFunc("/deleteUsers", deleteAll).Methods("DELETE")
-	subr.HandleFunc("/getUsers", getAll).Methods("GET")
-	subr.HandleFunc("/", def).Methods("GET")
-*/

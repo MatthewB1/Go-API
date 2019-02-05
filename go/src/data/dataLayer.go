@@ -19,8 +19,8 @@ func init(){
 	//************Collections******************************
 	defineUsersCollection(client)
 	defineTeamsCollection(client)
-	// projectsCollection := client.Database("db").Collection("projects")
-	// filesCollection := client.Database("db").Collection("files")
+	// defineFilesCollection(client)
+	// defineProjectsCollection(client)
 
 	//*************************************************************
 }

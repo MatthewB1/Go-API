@@ -1,4 +1,4 @@
-package users
+package userAdministration
 
 import (
 	"net/http"

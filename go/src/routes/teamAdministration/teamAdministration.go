@@ -1,4 +1,4 @@
-package teams
+package teamAdministration
 
 import (
 	"net/http"
