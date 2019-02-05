@@ -18,29 +18,25 @@ func SubRouter(router *mux.Router){
 
 func login(w http.ResponseWriter, req *http.Request) {
 	
-	user := data.GetUser(req.FormValue("username"),req.FormValue("password"))
+	_, err := data.GetUser(req.FormValue("username"),req.FormValue("password"))
 
-	if user != nil {
-		//return good
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func getAccessLevel(w http.ResponseWriter, req *http.Request) {
-	user := data.GetUser(req.FormValue("username"))
+	user, err := data.GetUser(req.FormValue("username"))
 
-	if user != nil{
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
-
-		ret := bson.M{"accessLevel":user.AccessLevel}
-		
-		json.NewEncoder(w).Encode(ret)
+		json.NewEncoder(w).Encode(data.DataJson{true, bson.M{"accessLevel":user.AccessLevel}})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }

@@ -2,6 +2,7 @@ package users
 
 import (
 	"net/http"
+
 	"data"
 	"encoding/json"
 	
@@ -22,94 +23,87 @@ func SubRouter(router *mux.Router){
 
 
 
+
 func addUser(w http.ResponseWriter, req *http.Request) {
 	
-	//build object from request
 	user := &data.User{
 		Username: req.FormValue("username"), 
 		Password: req.FormValue("password"),
 		AccessLevel: req.FormValue("accessLevel")}
 
-	responseCode := data.AddUser(user)
+	err := data.AddUser(user)
 
-	if responseCode == 0 {
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func getUser(w http.ResponseWriter, req *http.Request) {
 
-	user := data.GetUser(req.FormValue("username"))
+	user, err := data.GetUser(req.FormValue("username"))
 
-	if user != nil{
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
-		//return user as json
-		json.NewEncoder(w).Encode(user)
+		json.NewEncoder(w).Encode(data.UserJson{true, []data.User{*user}})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func deleteUser(w http.ResponseWriter, req *http.Request) {
-	responseCode := data.DeleteUser(req.FormValue("username"))
+	err := data.DeleteUser(req.FormValue("username"))
 
-	if responseCode == 0{
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func editUser(w http.ResponseWriter, req *http.Request) {
-	//build object from request
 	user := &data.User{
 		Username: req.FormValue("username"), 
 		Password: req.FormValue("password"),
 		AccessLevel: req.FormValue("accessLevel")}
 
-	responseCode := data.EditUser(user)
+	err := data.EditUser(user)
 
-	if responseCode == 0 {
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func deleteUsers(w http.ResponseWriter, req *http.Request) {
-	responseCode := data.DeleteUsers()
+	err := data.DeleteUsers()
 
-	if responseCode == 0 {
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func getAll(w http.ResponseWriter, req *http.Request) {
-	users := data.GetUsers()
+	users, err := data.GetUsers()
 
-	if len(*users) > 0{
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
-		//return user as json
-		for _, user := range *users{
-			json.NewEncoder(w).Encode(user)
-		}
+		json.NewEncoder(w).Encode(data.UserJson{true, *users})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }

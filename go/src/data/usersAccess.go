@@ -18,17 +18,16 @@ func defineUsersCollection(client *mongo.Client){
 }
 
 //********************User CRUD operations**********************
-func AddUser(record *User) int{
+func AddUser(record *User) error{
 	_, err := usersCollection.InsertOne(context.TODO(), record)
 	if err != nil {
-		fmt.Println(err)
-		return 1
+		return err
 	} else{
-		return 0
+		return nil
 	}
 }
 
-func GetUser(strings ...string) *User{
+func GetUser(strings ...string) (*User, error){
 
 	var filter bson.M
 
@@ -41,74 +40,77 @@ func GetUser(strings ...string) *User{
 
 	var result User
 
-	err := usersCollection.FindOne(context.TODO(), filter).Decode(&result)
+	res := usersCollection.FindOne(context.TODO(), filter)
+
+	err := res.Decode(&result)
+
+	// raw, decerr := res.DecodeBytes()
+
+	// if decerr != nil {fmt.Println("error decoding")} 
+
 	if err != nil{
 		fmt.Println(err)
-		return nil
+		return nil, err
 	} else {
-		return &result
+		return &result, nil
 	}
 }
 
-func DeleteUser(username string) int{
+func DeleteUser(username string) error{
 	filter := bson.M{"username":username}
 
 	_, err := usersCollection.DeleteOne(context.TODO(), filter)
+	
 	if err != nil{
-		fmt.Println(err)
-		return 1
+		return err
 	} else {
-		return 0
+		return nil
 	}
 }
 
-func EditUser(new *User) int{
+func EditUser(new *User) error{
 	filter := bson.M{"username":new.Username}
 
-	update:= bson.D{{"$set", bson.M{
-						"username" : new.Username,
-						"password" : new.Password,
-						"accessLevel" : new.AccessLevel}}}
+	var result User
 
-	_, err := usersCollection.UpdateOne(context.TODO(), filter, update)
+	err := usersCollection.FindOneAndReplace(context.TODO(), filter, new).Decode(&result)
 	if err != nil {
-		fmt.Println(err)
-		return 1
+		return err
 	} else{
-		return 0
+		return nil
 	}
 }
 
-func DeleteUsers() int{								//empty bson object is like a wildcard
-	res,err := usersCollection.DeleteMany(context.TODO(), bson.M{})
+func DeleteUsers() error{								//empty bson object is like a wildcard
+	_,err := usersCollection.DeleteMany(context.TODO(), bson.M{})
+
 	if  err != nil{
-		fmt.Println("error deleting records: ", err)
-		return 1
+		return err
 	} else {
-		fmt.Printf("Deleted %v documents in collection \"users\"", res.DeletedCount)
-		return 0
+		return nil
 	}
 }
 
-func GetUsers() *[]User{
+func GetUsers() (*[]User, error){
 	var users []User
 
 	cursor, err := usersCollection.Find(context.TODO(),  bson.M{}, options.Find())
 	defer cursor.Close(context.TODO())
+
 	if err != nil {
-		fmt.Println(err)
+		return &users, err
 	} else{
 		var elem User
 		for cursor.Next(context.TODO()) {
 			err := cursor.Decode(&elem)
 			if err != nil {
-				fmt.Println(err)
+				return &users, err
 			} else {
 				users = append(users, elem)
 			}
 		}
 	}
-	return &users
+	return &users, err
 }
 
 

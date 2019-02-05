@@ -6,7 +6,6 @@ import (
 	"log"
 	"github.com/mongodb/mongo-go-driver/mongo"
 
-	"gopkg.in/mgo.v2/bson"
 )
 
 func main(){

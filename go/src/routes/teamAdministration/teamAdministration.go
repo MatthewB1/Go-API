@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	
 	"github.com/gorilla/mux"
-
 )
 
 func SubRouter(router *mux.Router){
@@ -25,7 +24,6 @@ func SubRouter(router *mux.Router){
 }
 
 
-
 func addTeam(w http.ResponseWriter, req *http.Request) {
 
 	var users []data.User
@@ -33,10 +31,13 @@ func addTeam(w http.ResponseWriter, req *http.Request) {
 	usernames := strings.Split(req.FormValue("teamMembers"), ",")
 
 	for _, username := range usernames {
-		userPointer := data.GetUser(username)
-		if userPointer != nil{
-			users = append(users, *userPointer)
-		}
+		user, err := data.GetUser(username)
+		if err == nil{
+			users = append(users, *user)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		}	
 	}
 
 	team := &data.Team{
@@ -44,41 +45,40 @@ func addTeam(w http.ResponseWriter, req *http.Request) {
 		Teamleader: req.FormValue("teamleader"),
 		TeamMembers: users}
 
-	responseCode := data.AddTeam(team)
+	err := data.AddTeam(team)
 
-	if responseCode == 0 {
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func getTeam(w http.ResponseWriter, req *http.Request) {
 
-	team := data.GetTeam(req.FormValue("teamname"))
+	team, err := data.GetTeam(req.FormValue("teamname"))
 
-	if team != nil{
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
-		//return user as json
-		json.NewEncoder(w).Encode(team)
+		json.NewEncoder(w).Encode(data.TeamJson{true, []data.Team{*team}})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func deleteTeam(w http.ResponseWriter, req *http.Request) {
-	responseCode := data.DeleteTeam(req.FormValue("teamname"))
 
-	if responseCode == 0{
-		//return good
+	err := data.DeleteTeam(req.FormValue("teamname"))
+
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
@@ -89,7 +89,13 @@ func editTeam(w http.ResponseWriter, req *http.Request) {
 	usernames := strings.Split(req.FormValue("teamMembers"), ",")
 
 	for _, username := range usernames {
-		users = append(users, *data.GetUser(username))
+		user, err := data.GetUser(username)
+		if err == nil{
+			users = append(users, *user)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		}	
 	}
 	
 	team := &data.Team{
@@ -97,59 +103,50 @@ func editTeam(w http.ResponseWriter, req *http.Request) {
 		Teamleader: req.FormValue("teamleader"),
 		TeamMembers: users}
 
-	responseCode := data.EditTeam(team)
+	err := data.EditTeam(team)
 
-	if responseCode == 0 {
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(team)
-
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func deleteTeams(w http.ResponseWriter, req *http.Request) {
-	responseCode := data.DeleteTeams()
+	err := data.DeleteTeams()
 
-	if responseCode == 0 {
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func getAll(w http.ResponseWriter, req *http.Request) {
-	teams := data.GetTeams()
+	teams, err := data.GetTeams()
 
-	if len(*teams) > 0{
-		//return good
+	if err == nil{
 		w.WriteHeader(http.StatusOK)
-		//return user as json
-		for _, team := range *teams{
-			json.NewEncoder(w).Encode(team)
-		}
+		json.NewEncoder(w).Encode(data.TeamJson{true, *teams})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }
 
 func usersInTeam(w http.ResponseWriter, req *http.Request) {
-	team := data.GetTeam(req.FormValue("teamname"))
+
+	team, err := data.GetTeam(req.FormValue("teamname"))
 
 	if team != nil{
-		//return good
 		w.WriteHeader(http.StatusOK)
-		//return user as json
-		for _, user := range team.TeamMembers{
-			json.NewEncoder(w).Encode(user)
-		}
+		json.NewEncoder(w).Encode(data.UserJson{true, team.TeamMembers})
 	} else {
-		//return bad
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 }

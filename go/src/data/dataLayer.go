@@ -8,9 +8,6 @@ import (
 )
 
 var client *mongo.Client
-// var teamsCollection *mongo.Collection
-// var projectsCollection *mongo.Collection
-// var filesCollection *mongo.Collection
 
 
 func init(){

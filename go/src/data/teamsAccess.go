@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"fmt"
-	// "encoding/json"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/options"
@@ -19,17 +18,16 @@ func defineTeamsCollection(client *mongo.Client){
 }
 
 //********************Team CRUD operations**********************
-func AddTeam(record *Team) int{
+func AddTeam(record *Team) error{
 	_, err := teamsCollection.InsertOne(context.TODO(), record)
 	if err != nil {
-		fmt.Println(err)
-		return 1
+		return err
 	} else{
-		return 0
+		return nil
 	}
 }
 
-func GetTeam(teamname string) *Team{
+func GetTeam(teamname string) (*Team, error){
 	filter := bson.M{"teamname":teamname}
 
 	var result Team
@@ -37,70 +35,68 @@ func GetTeam(teamname string) *Team{
 	err := teamsCollection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil{
 		fmt.Println(err)
-		return nil
+		return nil, err
 	} else {
-		return &result
+		return &result, nil
 	}
 }
 
-func DeleteTeam(teamname string) int{
+func DeleteTeam(teamname string) error{
 	filter := bson.M{"teamname":teamname}
 
 	_, err := teamsCollection.DeleteOne(context.TODO(), filter)
+
 	if err != nil{
 		fmt.Println(err)
-		return 1
+		return err
 	} else {
-		return 0
+		return nil
 	}
 }
 
-func EditTeam(new *Team) int{
+func EditTeam(new *Team) error{
 	filter := bson.M{"teamname":new.Teamname}
 
-	
-	update := bson.D{{"$set", bson.M{"teamname":new.Teamname,"teamleader":new.Teamleader,"teamMembers":new.TeamMembers}}}
+	var result Team
 
-	//doesn't store changes to users[] in team :~(
+	err := teamsCollection.FindOneAndReplace(context.TODO(), filter, new).Decode(&result)
 
-	_, err := teamsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		fmt.Println(err)
-		return 1
-
+		return err
 	} else{
-		return 0
+		return nil
 	}
 }
 
-func DeleteTeams() int{								//empty bson object is like a wildcard
-	res,err := teamsCollection.DeleteMany(context.TODO(), bson.M{})
+func DeleteTeams() error{								//empty bson object is like a wildcard
+	_,err := teamsCollection.DeleteMany(context.TODO(), bson.M{})
+
 	if  err != nil{
-		fmt.Println("error deleting records: ", err)
-		return 1
+		return err
 	} else {
-		fmt.Printf("Deleted %v documents in collection \"teams\"", res.DeletedCount)
-		return 0
+		return nil
 	}
 }
 
-func GetTeams() *[]Team{
+func GetTeams() (*[]Team, error){
 	var teams []Team
 
 	cursor, err := teamsCollection.Find(context.TODO(),  bson.M{}, options.Find())
 	defer cursor.Close(context.TODO())
+
 	if err != nil {
-		fmt.Println(err)
+		return &teams, err
 	} else{
 		var elem Team
 		for cursor.Next(context.TODO()) {
 			err := cursor.Decode(&elem)
 			if err != nil {
 				fmt.Println(err)
+				return &teams, err
 			} else {
 				teams = append(teams, elem)
 			}
 		}
 	}
-	return &teams
+	return &teams, nil
 }

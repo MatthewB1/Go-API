@@ -2,8 +2,8 @@ package data
 
 import (
     // "gopkg.in/mgo.v2/bson"
-    
-	// "github.com/mongodb/mongo-go-driver/bson"
+    // "encoding/json"
+	"github.com/mongodb/mongo-go-driver/bson"
 )
 
 /*
@@ -14,7 +14,7 @@ import (
 }
 */
 type User struct {
-    // ID      bson.ObjectId `json:"_id" bson:"_id,omitempty"`
+    // ID         string `json:"_id",omitempty`
 	Username   string	`json:"username"`
 	Password   string	`json:"password"`
 	AccessLevel string	`json:"accessLevel"`
@@ -32,3 +32,30 @@ type Team struct {
     Teamleader string `json:"teamleader"`
     TeamMembers []User`json:"teamMembers"`
 }
+
+type Json struct{
+    Success bool `json:success`
+}
+
+type ErrorJson struct{
+    Success bool `json:success`
+    Error string `json:error`
+}
+
+type DataJson struct {
+    Success bool `json:success`
+    Data bson.M `json:data`
+}
+
+type UserJson struct{
+    Success bool    `json:success`
+    Data []User    `json:data,omitempty`
+}
+
+type TeamJson struct{
+    Success bool    `json:success`
+    Data []Team    `json:data,omitempty`
+}
+
+
+
