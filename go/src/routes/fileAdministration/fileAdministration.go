@@ -17,6 +17,9 @@ func SubRouter(router *mux.Router){
 	subr.HandleFunc("/file", deleteFile).Methods("DELETE")
 	subr.HandleFunc("/file", editFile).Methods("PUT")
 
+	
+	subr.HandleFunc("/addFileVersion", addFileVersion).Methods("PUT")
+
 
 	subr.HandleFunc("/files", deleteFiles).Methods("DELETE")
 	subr.HandleFunc("/files", getAll).Methods("GET")
@@ -33,20 +36,27 @@ func addFile(w http.ResponseWriter, req *http.Request) {
 		tags = append(tags, tag)
 	}
 
-	user, err := data.GetUser(req.FormValue("username"))
+	user, err := data.GetUser(req.FormValue("lasteditor"))
 
 	if err != nil{
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 
-	file := &data.File{
+
+	version := &data.Version{
 		Filename: req.FormValue("filename"),
 		Lastsaved: req.FormValue("lastsaved"), //time formatting ??
 		Lasteditor: *user,
-		Editcount: req.FormValue("editcount"),
 		TotaleditTime: req.FormValue("totaleditTime"),
 		Tags: tags}
+
+	var versions []data.Version
+
+	versions = append(versions, *version)
+
+	file := &data.File{
+		Versions: versions}
 
 	err = data.AddFile(file)
 
@@ -95,22 +105,64 @@ func editFile(w http.ResponseWriter, req *http.Request) {
 		tags = append(tags, tag)
 	}
 
-	user, err := data.GetUser(req.FormValue("username"))
+	user, err := data.GetUser(req.FormValue("lasteditor"))
 
 	if err != nil{
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 	}
 
-	file := &data.File{
+	version := &data.Version{
 		Filename: req.FormValue("filename"),
 		Lastsaved: req.FormValue("lastsaved"), //time formatting ??
 		Lasteditor: *user,
-		Editcount: req.FormValue("editcount"),
 		TotaleditTime: req.FormValue("totaleditTime"),
 		Tags: tags}
 
+	var versions []data.Version
+
+	versions = append(versions, *version)
+
+	file := &data.File{
+		Versions: versions}
+
 	err = data.EditFile(file)
+
+	if err == nil{
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.Json{true})
+	} else {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	}
+}
+
+func addFileVersion(w http.ResponseWriter, req *http.Request) {
+
+	var tags []string
+
+	tagsSlice := strings.Split(req.FormValue("tags"), ",")
+
+	for _, tag := range tagsSlice {
+		tags = append(tags, tag)
+	}
+
+	user, err := data.GetUser(req.FormValue("lasteditor"))
+
+	if err != nil{
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	}
+
+	version := &data.Version{
+		Filename: req.FormValue("filename"),
+		Lastsaved: req.FormValue("lastsaved"), //time formatting ??
+		Lasteditor: *user,
+		TotaleditTime: req.FormValue("totaleditTime"),
+		Tags: tags}
+
+
+	err = data.AddFileVersion(version)
 
 	if err == nil{
 		w.WriteHeader(http.StatusOK)

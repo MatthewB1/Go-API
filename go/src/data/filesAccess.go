@@ -28,7 +28,7 @@ func AddFile(record *File) error{
 
 func GetFile(filename string) (*File, error){
 
-	filter := bson.M{"filename":filename}
+	filter := bson.M{"versions.filename":filename}
 
 	var result File
 
@@ -42,7 +42,7 @@ func GetFile(filename string) (*File, error){
 }
 
 func DeleteFile(filename string) error{
-	filter := bson.M{"filename":filename}
+	filter := bson.M{"versions.filename":filename}
 
 	_, err := filesCollection.DeleteOne(context.TODO(), filter)
 	
@@ -54,7 +54,7 @@ func DeleteFile(filename string) error{
 }
 
 func EditFile(new *File) error{
-	filter := bson.M{"filename":new.Filename}
+	filter := bson.M{"versions.filename":new.Versions[0].Filename}
 
 	var result File
 
@@ -64,6 +64,24 @@ func EditFile(new *File) error{
 	} else{
 		return nil
 	}
+}
+
+func AddFileVersion(new *Version) error{
+
+	filter := bson.M{"versions.filename":new.Filename}
+
+	update, err := GetFile(new.Filename)
+
+	update.Versions = append(update.Versions, *new)
+
+	var result File
+
+	err = filesCollection.FindOneAndReplace(context.TODO(), filter, update).Decode(&result)
+	if err != nil {
+		return err
+	} else{
+		return nil
+	}	
 }
 
 func DeleteFiles() error{								//empty bson object is like a wildcard

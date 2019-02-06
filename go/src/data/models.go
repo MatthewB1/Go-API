@@ -54,21 +54,28 @@ type Project struct {
 }
 /*
 {
-    "filename": "",
-    "lastsaved": "",
-    "lasteditor": "",
-    "editcount": "",
-    "totalEditTime": "",
-    "tags": []
+    [
+        {
+        "filename": "",
+        "lastsaved": "",
+        "lasteditor": "",
+        "versionNo": "",
+        "totalEditTime": "",
+        "tags": []
+        }
+    ]
 }
 */
 
 type File struct {
+    Versions []Version `json:"versions"`
+}
+
+type Version struct {
     //ID    bson.ObjectId `bson:"_id, omitempty"`
     Filename string `json:"filename"`
     Lastsaved string `json:"lastsaved"` //maybe change to time.Time
     Lasteditor User `json:"lasteditor"`
-    Editcount string `json:"editcount"`
     TotaleditTime string `json:"totaleditTime"`
     Tags []string `json:"tags"`
 }

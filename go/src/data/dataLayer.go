@@ -19,8 +19,8 @@ func init(){
 	//************Collections******************************
 	defineUsersCollection(client)
 	defineTeamsCollection(client)
-	// defineFilesCollection(client)
-	// defineProjectsCollection(client)
+	defineFilesCollection(client)
+	defineProjectsCollection(client)
 
 	//*************************************************************
 }

@@ -19,6 +19,7 @@ import (
 func main() {
 	router := mux.NewRouter()
 
+	//subrouters for routes
 	userAdministration.SubRouter(router)
 	teamAdministration.SubRouter(router)
 	fileAdministration.SubRouter(router)
@@ -26,11 +27,11 @@ func main() {
 	auth.SubRouter(router)
 
 
-	//attach middleware
+	//attach middlewares
 	middleware.AttachMiddleware(router)
 
+	//accept CORS requests
 	handler := cors.Default().Handler(router)
 	
-	// router.PathPrefix("/api")
     log.Fatal(http.ListenAndServe(":8080", handler))
 }
