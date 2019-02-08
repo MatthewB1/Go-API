@@ -187,7 +187,6 @@ func RemoveUsers(projectname string, users *[]User) error{
     	}
 	}
 
-
 	var result Project
 
 	err = projectsCollection.FindOneAndReplace(context.TODO(), filter, update).Decode(&result)

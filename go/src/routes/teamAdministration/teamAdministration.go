@@ -40,12 +40,15 @@ func addTeam(w http.ResponseWriter, req *http.Request) {
 		}	
 	}
 
+	
+	leader, err := data.GetUser(req.FormValue("teamleader"))
+
 	team := &data.Team{
 		Teamname: req.FormValue("teamname"), 
-		Teamleader: req.FormValue("teamleader"),
+		Teamleader: *leader,
 		TeamMembers: users}
 
-	err := data.AddTeam(team)
+	err = data.AddTeam(team)
 
 	if err == nil{
 		w.WriteHeader(http.StatusOK)
@@ -97,13 +100,15 @@ func editTeam(w http.ResponseWriter, req *http.Request) {
 			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 		}	
 	}
+
+	leader, err := data.GetUser(req.FormValue("teamleader"))
 	
 	team := &data.Team{
 		Teamname: req.FormValue("teamname"), 
-		Teamleader: req.FormValue("teamleader"),
+		Teamleader: *leader,
 		TeamMembers: users}
 
-	err := data.EditTeam(team)
+	err = data.EditTeam(team)
 
 	if err == nil{
 		w.WriteHeader(http.StatusOK)

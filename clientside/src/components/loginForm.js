@@ -31,7 +31,6 @@ class LoginFormComponent extends Component {
     handleSubmit = (event) => {
         //Make a network call somewhere
         console.log(this.state);
-        // fetch("localhost:8080/login?username=
         fetch('/api/userAdministration/users')
             .then(data => data.json())
             .then(res => {

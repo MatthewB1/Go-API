@@ -32,7 +32,7 @@ type User struct {
 type Team struct {
     // ID      bson.ObjectId `bson:"_id,omitempty"`
     Teamname string `json:"teamname"`
-    Teamleader string `json:"teamleader"`
+    Teamleader User `json:"teamleader"`
     TeamMembers []User`json:"teamMembers"`
 }
 /*

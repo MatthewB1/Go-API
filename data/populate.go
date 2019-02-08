@@ -31,7 +31,11 @@ func main(){
 
 	//insert teams
 	
-	// teamsCollection := client.Database9("db").Collection("teams")
+	teamsCollection := client.Database("db").Collection("teams")
+
+	albatrosses := &Team{Teamname: "albatrosses", Teamleader: "Dan", TeamMembers: []User{*matthew, *john}}
+	puffins := &Team{Teamname: "puffins",Teamleader: "Steve", TeamMembers: []User{*matthew, *dan}}
+
 }
 
 
@@ -81,6 +85,6 @@ type User struct {
 type Team struct {
     // ID      bson.ObjectId `bson:"_id,omitempty"`
     Teamname string `json:"teamname"`
-    Teamleader string `json:"teamleader"`
+    Teamleader User `json:"teamleader"`
     TeamMembers []User `json:"teamMembers"`
 }
