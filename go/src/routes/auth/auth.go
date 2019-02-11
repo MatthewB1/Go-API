@@ -5,7 +5,6 @@ import (
 	"data"
 	"encoding/json"
 	"fmt"
-    "io/ioutil"
 	
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/gorilla/mux"
@@ -19,28 +18,26 @@ func SubRouter(router *mux.Router){
 }
 
 func login(w http.ResponseWriter, req *http.Request) {
-	body, readerr := ioutil.ReadAll(req.Body)
-	if readerr != nil {
-        panic(readerr)
-	}
 	
-	fmt.Println(string(body))
+	var requestBody map[string]interface{}
 
-
-	// req.ParseForm()
-	// fmt.Println(req.Form)
-	var v interface{}
-	
-	err := json.Unmarshal(body, &v)
-	
-	// _, err := data.GetUser(req.FormValue("username"),req.FormValue("password"))
-
-	if err == nil {
+	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
+	if decErr != nil {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
+		fmt.Printf("Error decoding : %v", decErr)
 	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+
+		_, err := data.GetUser(requestBody["username"].(string), requestBody["password"].(string))
+	
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+			fmt.Printf("Error authenticating : %v", err)
+		}
 	}
 }
 

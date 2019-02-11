@@ -1,15 +1,16 @@
 package projectAdministration
 
 import (
-	"net/http"
-	"strings"
 	"data"
 	"encoding/json"
-	
+	"net/http"
+	"strings"
+
 	"github.com/gorilla/mux"
+	"github.com/mitchellh/mapstructure"
 )
 
-func SubRouter(router *mux.Router){
+func SubRouter(router *mux.Router) {
 	subr := router.PathPrefix("/api/projectAdministration").Subrouter()
 
 	subr.HandleFunc("/project", addProject).Methods("POST")
@@ -25,70 +26,40 @@ func SubRouter(router *mux.Router){
 	subr.HandleFunc("/removeTeams", removeTeams).Methods("PUT")
 	subr.HandleFunc("/removeUsers", removeUsers).Methods("PUT")
 
-
 	subr.HandleFunc("/projects", deleteProjects).Methods("DELETE")
 	subr.HandleFunc("/projects", getAll).Methods("GET")
 }
 
-
 func addProject(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
 
-	var files []data.File
+	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
+	if decErr == nil {
 
-	filenames := strings.Split(req.FormValue("files"), ",")
+		var leader data.User
 
-	for _, filename := range filenames {
-		file, err := data.GetFile(filename)
-		if err == nil{
-			files = append(files, *file)
+		mapstructure.Decode(requestBody["projectlead"], &leader)
+
+		project := &data.Project{
+			Projectname: requestBody["projectname"].(string),
+			Projectlead: leader,
+			Files:       nil,
+			Teams:       nil,
+			Users:       nil}
+
+		err := data.AddProject(project)
+
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
 		}
-	}
-
-	var teams []data.Team
-
-	teamnames := strings.Split(req.FormValue("teams"), ",")
-
-	for _, teamname := range teamnames {
-		team, err := data.GetTeam(teamname)
-		if err == nil{
-			teams = append(teams, *team)
-		} 
-	}
-
-	var users []data.User
-
-	usernames := strings.Split(req.FormValue("users"), ",")
-
-	for _, username := range usernames {
-		user, err := data.GetUser(username)
-		if err == nil{
-			users = append(users, *user)
-		}
-	}
-
-	user, err := data.GetUser(req.FormValue("projectlead"))
-
-	if err != nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-	}	
-
-	project := &data.Project{
-		Projectname: req.FormValue("projectname"),
-		Projectlead: *user,
-		Files: files,
-		Teams: teams,
-		Users: users}
-	
-
-	err = data.AddProject(project)
-
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
+
 	}
 }
 
@@ -96,7 +67,7 @@ func getProject(w http.ResponseWriter, req *http.Request) {
 
 	project, err := data.GetProject(req.FormValue("projectname"))
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.ProjectJson{true, []data.Project{*project}})
 	} else {
@@ -109,7 +80,7 @@ func deleteProject(w http.ResponseWriter, req *http.Request) {
 
 	err := data.DeleteProject(req.FormValue("projectname"))
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -119,26 +90,35 @@ func deleteProject(w http.ResponseWriter, req *http.Request) {
 }
 
 func editProject(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
 
-	user, err := data.GetUser(req.FormValue("projectlead"))
+	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
+	if decErr == nil {
 
-	if err != nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-	}	
+		var leader data.User
 
-	project, err := data.GetProject(req.FormValue("projectname"))
+		mapstructure.Decode(requestBody["projectlead"], &leader)
 
-	project.Projectlead = *user
+		project := &data.Project{
+			Projectname: requestBody["projectname"].(string),
+			Projectlead: leader,
+			Files:       nil,
+			Teams:       nil,
+			Users:       nil}
 
-	err = data.EditProject(project)
+		err := data.EditProject(project)
 
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		}
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
+
 	}
 }
 
@@ -150,7 +130,7 @@ func addFiles(w http.ResponseWriter, req *http.Request) {
 
 	for _, filename := range filenames {
 		file, err := data.GetFile(filename)
-		if err == nil{
+		if err == nil {
 			files = append(files, *file)
 		} else {
 			w.WriteHeader(http.StatusOK)
@@ -160,7 +140,7 @@ func addFiles(w http.ResponseWriter, req *http.Request) {
 
 	err := data.AddFiles(req.FormValue("projectname"), &files)
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -177,7 +157,7 @@ func addTeams(w http.ResponseWriter, req *http.Request) {
 
 	for _, teamname := range teamnames {
 		team, err := data.GetTeam(teamname)
-		if err == nil{
+		if err == nil {
 			teams = append(teams, *team)
 		} else {
 			w.WriteHeader(http.StatusOK)
@@ -187,7 +167,7 @@ func addTeams(w http.ResponseWriter, req *http.Request) {
 
 	err := data.AddTeams(req.FormValue("projectname"), &teams)
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -204,7 +184,7 @@ func addUsers(w http.ResponseWriter, req *http.Request) {
 
 	for _, username := range usernames {
 		user, err := data.GetUser(username)
-		if err == nil{
+		if err == nil {
 			users = append(users, *user)
 		} else {
 			w.WriteHeader(http.StatusOK)
@@ -214,7 +194,7 @@ func addUsers(w http.ResponseWriter, req *http.Request) {
 
 	err := data.AddUsers(req.FormValue("projectname"), &users)
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -231,7 +211,7 @@ func removeFiles(w http.ResponseWriter, req *http.Request) {
 
 	for _, filename := range filenames {
 		file, err := data.GetFile(filename)
-		if err == nil{
+		if err == nil {
 			files = append(files, *file)
 		} else {
 			w.WriteHeader(http.StatusOK)
@@ -241,7 +221,7 @@ func removeFiles(w http.ResponseWriter, req *http.Request) {
 
 	err := data.RemoveFiles(req.FormValue("projectname"), &files)
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -258,7 +238,7 @@ func removeTeams(w http.ResponseWriter, req *http.Request) {
 
 	for _, teamname := range teamnames {
 		team, err := data.GetTeam(teamname)
-		if err == nil{
+		if err == nil {
 			teams = append(teams, *team)
 		} else {
 			w.WriteHeader(http.StatusOK)
@@ -268,7 +248,7 @@ func removeTeams(w http.ResponseWriter, req *http.Request) {
 
 	err := data.RemoveTeams(req.FormValue("projectname"), &teams)
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -285,7 +265,7 @@ func removeUsers(w http.ResponseWriter, req *http.Request) {
 
 	for _, username := range usernames {
 		user, err := data.GetUser(username)
-		if err == nil{
+		if err == nil {
 			users = append(users, *user)
 		} else {
 			w.WriteHeader(http.StatusOK)
@@ -295,7 +275,7 @@ func removeUsers(w http.ResponseWriter, req *http.Request) {
 
 	err := data.RemoveUsers(req.FormValue("projectname"), &users)
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -307,7 +287,7 @@ func removeUsers(w http.ResponseWriter, req *http.Request) {
 func deleteProjects(w http.ResponseWriter, req *http.Request) {
 	err := data.DeleteProjects()
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -319,7 +299,7 @@ func deleteProjects(w http.ResponseWriter, req *http.Request) {
 func getAll(w http.ResponseWriter, req *http.Request) {
 	projects, err := data.GetProjects()
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.ProjectJson{true, *projects})
 	} else {

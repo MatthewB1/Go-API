@@ -5,11 +5,11 @@ import (
 
 	"data"
 	"encoding/json"
-	
+
 	"github.com/gorilla/mux"
 )
 
-func SubRouter(router *mux.Router){
+func SubRouter(router *mux.Router) {
 	subr := router.PathPrefix("/api/userAdministration").Subrouter()
 
 	subr.HandleFunc("/user", addUser).Methods("POST")
@@ -21,24 +21,30 @@ func SubRouter(router *mux.Router){
 	subr.HandleFunc("/users", getAll).Methods("GET")
 }
 
-
-
-
 func addUser(w http.ResponseWriter, req *http.Request) {
-	
-	user := &data.User{
-		Username: req.FormValue("username"), 
-		Password: req.FormValue("password"),
-		AccessLevel: req.FormValue("accessLevel")}
+	var requestBody map[string]interface{}
 
-	err := data.AddUser(user)
+	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
+	if decErr == nil {
 
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
+		user := &data.User{
+			Username:    requestBody["username"].(string),
+			Password:    requestBody["password"].(string),
+			AccessLevel: requestBody["accessLevel"].(string)}
+
+		err := data.AddUser(user)
+
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		}
+
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
 	}
 }
 
@@ -46,7 +52,7 @@ func getUser(w http.ResponseWriter, req *http.Request) {
 
 	user, err := data.GetUser(req.FormValue("username"))
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.UserJson{true, []data.User{*user}})
 	} else {
@@ -58,7 +64,7 @@ func getUser(w http.ResponseWriter, req *http.Request) {
 func deleteUser(w http.ResponseWriter, req *http.Request) {
 	err := data.DeleteUser(req.FormValue("username"))
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -68,26 +74,36 @@ func deleteUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func editUser(w http.ResponseWriter, req *http.Request) {
-	user := &data.User{
-		Username: req.FormValue("username"), 
-		Password: req.FormValue("password"),
-		AccessLevel: req.FormValue("accessLevel")}
+	var request map[string]interface{}
 
-	err := data.EditUser(user)
+	decErr := json.NewDecoder(req.Body).Decode(&request)
+	if decErr == nil {
 
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
+		user := &data.User{
+			Username:    request["username"].(string),
+			Password:    request["password"].(string),
+			AccessLevel: request["accessLevel"].(string)}
+
+		err := data.EditUser(user)
+
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		}
+
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
 	}
 }
 
 func deleteUsers(w http.ResponseWriter, req *http.Request) {
 	err := data.DeleteUsers()
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -99,7 +115,7 @@ func deleteUsers(w http.ResponseWriter, req *http.Request) {
 func getAll(w http.ResponseWriter, req *http.Request) {
 	users, err := data.GetUsers()
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.UserJson{true, *users})
 	} else {

@@ -1,71 +1,77 @@
 package fileAdministration
 
 import (
-	"net/http"
-	"strings"
 	"data"
 	"encoding/json"
-	
+	"net/http"
+
 	"github.com/gorilla/mux"
+	"github.com/mitchellh/mapstructure"
 )
 
-func SubRouter(router *mux.Router){
+func SubRouter(router *mux.Router) {
 	subr := router.PathPrefix("/api/fileAdministration").Subrouter()
 
 	subr.HandleFunc("/file", addFile).Methods("POST")
 	subr.HandleFunc("/file", getFile).Methods("GET")
 	subr.HandleFunc("/file", deleteFile).Methods("DELETE")
-	subr.HandleFunc("/file", editFile).Methods("PUT")
 
-	
 	subr.HandleFunc("/addFileVersion", addFileVersion).Methods("PUT")
-
 
 	subr.HandleFunc("/files", deleteFiles).Methods("DELETE")
 	subr.HandleFunc("/files", getAll).Methods("GET")
 }
 
-
 func addFile(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
 
-	var tags []string
+	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
+	if decErr == nil {
+		//map[string]interface{}
+		versionsBody := requestBody["versions"]
 
-	tagsSlice := strings.Split(req.FormValue("tags"), ",")
+		var versions []data.Version
+		var version data.Version
 
-	for _, tag := range tagsSlice {
-		tags = append(tags, tag)
-	}
+		var editor data.User
+		var tags []string
 
-	user, err := data.GetUser(req.FormValue("lasteditor"))
+		//iterate through all version objects
+		for _, versionBody := range versionsBody.([]interface{}) {
 
-	if err != nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-	}
+			mapstructure.Decode(versionBody.(map[string]interface{})["lasteditor"], &editor)
 
+			for _, tag := range versionBody.(map[string]interface{})["tags"].([]interface{}) {
+				tags = append(tags, tag.(string))
+			}
 
-	version := &data.Version{
-		Filename: req.FormValue("filename"),
-		Lastsaved: req.FormValue("lastsaved"), //time formatting ??
-		Lasteditor: *user,
-		TotaleditTime: req.FormValue("totaleditTime"),
-		Tags: tags}
+			version = data.Version{
+				Lastsaved:     versionBody.(map[string]interface{})["lastsaved"].(string), //time formatting ??
+				Lasteditor:    editor,
+				TotaleditTime: versionBody.(map[string]interface{})["totaleditTime"].(string),
+				Tags:          tags}
 
-	var versions []data.Version
+			versions = append(versions, version)
+			//clear slice
+			tags = nil
+		}
 
-	versions = append(versions, *version)
+		file := &data.File{
+			Filename: requestBody["filename"].(string),
+			Versions: versions}
 
-	file := &data.File{
-		Versions: versions}
+		err := data.AddFile(file)
 
-	err = data.AddFile(file)
-
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		}
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
 	}
 }
 
@@ -73,7 +79,7 @@ func getFile(w http.ResponseWriter, req *http.Request) {
 
 	file, err := data.GetFile(req.FormValue("filename"))
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.FileJson{true, []data.File{*file}})
 	} else {
@@ -86,49 +92,7 @@ func deleteFile(w http.ResponseWriter, req *http.Request) {
 
 	err := data.DeleteFile(req.FormValue("filename"))
 
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-	}
-}
-
-func editFile(w http.ResponseWriter, req *http.Request) {
-
-	var tags []string
-
-	tagsSlice := strings.Split(req.FormValue("tags"), ",")
-
-	for _, tag := range tagsSlice {
-		tags = append(tags, tag)
-	}
-
-	user, err := data.GetUser(req.FormValue("lasteditor"))
-
-	if err != nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-	}
-
-	version := &data.Version{
-		Filename: req.FormValue("filename"),
-		Lastsaved: req.FormValue("lastsaved"), //time formatting ??
-		Lasteditor: *user,
-		TotaleditTime: req.FormValue("totaleditTime"),
-		Tags: tags}
-
-	var versions []data.Version
-
-	versions = append(versions, *version)
-
-	file := &data.File{
-		Versions: versions}
-
-	err = data.EditFile(file)
-
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -138,45 +102,47 @@ func editFile(w http.ResponseWriter, req *http.Request) {
 }
 
 func addFileVersion(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
 
-	var tags []string
+	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
+	if decErr == nil {
 
-	tagsSlice := strings.Split(req.FormValue("tags"), ",")
+		versionBody := requestBody["version"]
 
-	for _, tag := range tagsSlice {
-		tags = append(tags, tag)
-	}
+		var editor data.User
+		var tags []string
 
-	user, err := data.GetUser(req.FormValue("lasteditor"))
+		mapstructure.Decode(versionBody.(map[string]interface{})["lasteditor"], &editor)
 
-	if err != nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-	}
+		for _, tag := range versionBody.(map[string]interface{})["tags"].([]interface{}) {
+			tags = append(tags, tag.(string))
+		}
 
-	version := &data.Version{
-		Filename: req.FormValue("filename"),
-		Lastsaved: req.FormValue("lastsaved"), //time formatting ??
-		Lasteditor: *user,
-		TotaleditTime: req.FormValue("totaleditTime"),
-		Tags: tags}
+		version := &data.Version{
+			Lastsaved:     versionBody.(map[string]interface{})["lastsaved"].(string), //time formatting ??
+			Lasteditor:    editor,
+			TotaleditTime: versionBody.(map[string]interface{})["totaleditTime"].(string),
+			Tags:          tags}
 
+		err := data.AddFileVersion(requestBody["filename"].(string), version)
 
-	err = data.AddFileVersion(version)
-
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
+		} else {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		}
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
 	}
 }
 
 func deleteFiles(w http.ResponseWriter, req *http.Request) {
 	err := data.DeleteFiles()
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -188,7 +154,7 @@ func deleteFiles(w http.ResponseWriter, req *http.Request) {
 func getAll(w http.ResponseWriter, req *http.Request) {
 	files, err := data.GetFiles()
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.FileJson{true, *files})
 	} else {

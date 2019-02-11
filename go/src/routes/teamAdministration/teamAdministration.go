@@ -1,15 +1,15 @@
 package teamAdministration
 
 import (
-	"net/http"
-	"strings"
 	"data"
 	"encoding/json"
-	
+	"net/http"
+
 	"github.com/gorilla/mux"
+	"github.com/mitchellh/mapstructure"
 )
 
-func SubRouter(router *mux.Router){
+func SubRouter(router *mux.Router) {
 	subr := router.PathPrefix("/api/teamAdministration").Subrouter()
 
 	subr.HandleFunc("/team", addTeam).Methods("POST")
@@ -23,39 +23,37 @@ func SubRouter(router *mux.Router){
 	subr.HandleFunc("/teams", getAll).Methods("GET")
 }
 
-
 func addTeam(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
 
-	var users []data.User
+	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
+	if decErr == nil {
 
-	usernames := strings.Split(req.FormValue("teamMembers"), ",")
+		var leader data.User
 
-	for _, username := range usernames {
-		user, err := data.GetUser(username)
-		if err == nil{
-			users = append(users, *user)
+		mapstructure.Decode(requestBody["teamLeader"], &leader)
+
+		var users []data.User
+
+		mapstructure.Decode(requestBody["teamMembers"], &users)
+
+		team := &data.Team{
+			Teamname:    requestBody["teamname"].(string),
+			Teamleader:  leader,
+			TeamMembers: users}
+
+		err := data.AddTeam(team)
+
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
 		} else {
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}	
-	}
-
-	
-	leader, err := data.GetUser(req.FormValue("teamleader"))
-
-	team := &data.Team{
-		Teamname: req.FormValue("teamname"), 
-		Teamleader: *leader,
-		TeamMembers: users}
-
-	err = data.AddTeam(team)
-
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
+		}
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
 	}
 }
 
@@ -63,7 +61,7 @@ func getTeam(w http.ResponseWriter, req *http.Request) {
 
 	team, err := data.GetTeam(req.FormValue("teamname"))
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.TeamJson{true, []data.Team{*team}})
 	} else {
@@ -76,7 +74,7 @@ func deleteTeam(w http.ResponseWriter, req *http.Request) {
 
 	err := data.DeleteTeam(req.FormValue("teamname"))
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -86,43 +84,43 @@ func deleteTeam(w http.ResponseWriter, req *http.Request) {
 }
 
 func editTeam(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
 
-	var users []data.User
+	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
+	if decErr == nil {
 
-	usernames := strings.Split(req.FormValue("teamMembers"), ",")
+		var leader data.User
 
-	for _, username := range usernames {
-		user, err := data.GetUser(username)
-		if err == nil{
-			users = append(users, *user)
+		mapstructure.Decode(requestBody["teamLeader"], &leader)
+
+		var users []data.User
+
+		mapstructure.Decode(requestBody["teamMembers"], &users)
+
+		team := &data.Team{
+			Teamname:    requestBody["teamname"].(string),
+			Teamleader:  leader,
+			TeamMembers: users}
+
+		err := data.EditTeam(team)
+
+		if err == nil {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(data.Json{true})
 		} else {
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}	
-	}
-
-	leader, err := data.GetUser(req.FormValue("teamleader"))
-	
-	team := &data.Team{
-		Teamname: req.FormValue("teamname"), 
-		Teamleader: *leader,
-		TeamMembers: users}
-
-	err = data.EditTeam(team)
-
-	if err == nil{
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
+		}
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
 	}
 }
 
 func deleteTeams(w http.ResponseWriter, req *http.Request) {
 	err := data.DeleteTeams()
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.Json{true})
 	} else {
@@ -134,7 +132,7 @@ func deleteTeams(w http.ResponseWriter, req *http.Request) {
 func getAll(w http.ResponseWriter, req *http.Request) {
 	teams, err := data.GetTeams()
 
-	if err == nil{
+	if err == nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.TeamJson{true, *teams})
 	} else {
@@ -147,7 +145,7 @@ func usersInTeam(w http.ResponseWriter, req *http.Request) {
 
 	team, err := data.GetTeam(req.FormValue("teamname"))
 
-	if team != nil{
+	if team != nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(data.UserJson{true, team.TeamMembers})
 	} else {

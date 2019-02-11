@@ -1,10 +1,10 @@
 package data
 
 import (
-    // "gopkg.in/mgo.v2/bson"
-    // "encoding/json"
-    "github.com/mongodb/mongo-go-driver/bson"
-    // "time"
+	// "gopkg.in/mgo.v2/bson"
+	// "encoding/json"
+	"github.com/mongodb/mongo-go-driver/bson"
+	// "time"
 )
 
 //*****************Data models******************
@@ -17,11 +17,12 @@ import (
 }
 */
 type User struct {
-    // ID         string `json:"_id",omitempty`
-	Username   string	`json:"username"`
-	Password   string	`json:"password"`
-	AccessLevel string	`json:"accessLevel"`
+	// ID         string `json:"_id",omitempty`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	AccessLevel string `json:"accessLevel"`
 }
+
 /*
 {
     "teamName": "",
@@ -30,11 +31,11 @@ type User struct {
 }
 */
 type Team struct {
-    // ID      bson.ObjectId `bson:"_id,omitempty"`
-    Teamname string `json:"teamname"`
-    Teamleader User `json:"teamleader"`
-    TeamMembers []User`json:"teamMembers"`
+	Teamname    string `json:"teamname"`
+	Teamleader  User   `json:"teamleader"`
+	TeamMembers []User `json:"teamMembers"`
 }
+
 /*
 {
     "projectname": "",
@@ -45,13 +46,14 @@ type Team struct {
 */
 
 type Project struct {
-    //ID    bson.ObjectId `bson:"_id, omitempty"`
-    Projectname string `json:"projectname`
-    Projectlead User `json:"projectlead`
-    Files []File `json:"files"`
-    Teams []Team `json:"teams"`
-    Users []User `json:"users"`
+	//ID    bson.ObjectId `bson:"_id, omitempty"`
+	Projectname string `json:"projectname`
+	Projectlead User   `json:"projectlead`
+	Files       []File `json:"files"`
+	Teams       []Team `json:"teams"`
+	Users       []User `json:"users"`
 }
+
 /*
 {
     [
@@ -68,54 +70,50 @@ type Project struct {
 */
 
 type File struct {
-    Versions []Version `json:"versions"`
+	Filename string    `json:"filename"`
+	Versions []Version `json:"versions"`
 }
 
 type Version struct {
-    //ID    bson.ObjectId `bson:"_id, omitempty"`
-    Filename string `json:"filename"`
-    Lastsaved string `json:"lastsaved"` //maybe change to time.Time
-    Lasteditor User `json:"lasteditor"`
-    TotaleditTime string `json:"totaleditTime"`
-    Tags []string `json:"tags"`
+	//ID    bson.ObjectId `bson:"_id, omitempty"`
+	Lastsaved     string   `json:"lastsaved"` //maybe change to time.Time
+	Lasteditor    User     `json:"lasteditor"`
+	TotaleditTime string   `json:"totaleditTime"`
+	Tags          []string `json:"tags"`
 }
-
 
 //**************Json data models*****************
 
-type Json struct{
-    Success bool `json:success`
+type Json struct {
+	Success bool `json:success`
 }
 
-type ErrorJson struct{
-    Success bool `json:success`
-    Error string `json:error`
+type ErrorJson struct {
+	Success bool   `json:success`
+	Error   string `json:error`
 }
 
 type DataJson struct {
-    Success bool `json:success`
-    Data bson.M `json:data`
+	Success bool   `json:success`
+	Data    bson.M `json:data`
 }
 
-type UserJson struct{
-    Success bool    `json:success`
-    Data []User    `json:data,omitempty`
+type UserJson struct {
+	Success bool   `json:success`
+	Data    []User `json:data,omitempty`
 }
 
-type TeamJson struct{
-    Success bool    `json:success`
-    Data []Team    `json:data,omitempty`
+type TeamJson struct {
+	Success bool   `json:success`
+	Data    []Team `json:data,omitempty`
 }
 
-type ProjectJson struct{
-    Success bool    `json:success`
-    Data []Project    `json:data,omitempty`
+type ProjectJson struct {
+	Success bool      `json:success`
+	Data    []Project `json:data,omitempty`
 }
 
-type FileJson struct{
-    
-    Success bool    `json:success`
-    Data []File    `json:data,omitempty`
+type FileJson struct {
+	Success bool   `json:success`
+	Data    []File `json:data,omitempty`
 }
-
-
