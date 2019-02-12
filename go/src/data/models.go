@@ -31,6 +31,12 @@ type User struct {
 }
 */
 type Team struct {
+	Teamname    string   `json:"teamname"`
+	Teamleader  string   `json:"teamleader"`
+	TeamMembers []string `json:"teamMembers"`
+}
+
+type TeamResponse struct {
 	Teamname    string `json:"teamname"`
 	Teamleader  User   `json:"teamleader"`
 	TeamMembers []User `json:"teamMembers"`
@@ -46,6 +52,15 @@ type Team struct {
 */
 
 type Project struct {
+	//ID    bson.ObjectId `bson:"_id, omitempty"`
+	Projectname string   `json:"projectname`
+	Projectlead User     `json:"projectlead`
+	Files       []string `json:"files"`
+	Teams       []string `json:"teams"`
+	Users       []string `json:"users"`
+}
+
+type ProjectResponse struct {
 	//ID    bson.ObjectId `bson:"_id, omitempty"`
 	Projectname string `json:"projectname`
 	Projectlead User   `json:"projectlead`
@@ -77,7 +92,7 @@ type File struct {
 type Version struct {
 	//ID    bson.ObjectId `bson:"_id, omitempty"`
 	Lastsaved     string   `json:"lastsaved"` //maybe change to time.Time
-	Lasteditor    User     `json:"lasteditor"`
+	Lasteditor    string   `json:"lasteditor"`
 	TotaleditTime string   `json:"totaleditTime"`
 	Tags          []string `json:"tags"`
 }
@@ -104,10 +119,9 @@ type UserJson struct {
 }
 
 type TeamJson struct {
-	Success bool   `json:success`
-	Data    []Team `json:data,omitempty`
+	Success bool           `json:success`
+	Data    []TeamResponse `json:data,omitempty`
 }
-
 type ProjectJson struct {
 	Success bool      `json:success`
 	Data    []Project `json:data,omitempty`

@@ -4,7 +4,7 @@ import (
 	"data"
 	"encoding/json"
 	"net/http"
-	"strings"
+	utils "routes"
 
 	"github.com/gorilla/mux"
 	"github.com/mitchellh/mapstructure"
@@ -33,277 +33,290 @@ func SubRouter(router *mux.Router) {
 func addProject(w http.ResponseWriter, req *http.Request) {
 	var requestBody map[string]interface{}
 
-	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
-	if decErr == nil {
-
-		var leader data.User
-
-		mapstructure.Decode(requestBody["projectlead"], &leader)
-
-		project := &data.Project{
-			Projectname: requestBody["projectname"].(string),
-			Projectlead: leader,
-			Files:       nil,
-			Teams:       nil,
-			Users:       nil}
-
-		err := data.AddProject(project)
-
-		if err == nil {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.Json{true})
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
-
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	var leader data.User
+
+	mapstructure.Decode(requestBody["projectlead"], &leader)
+
+	project := &data.Project{
+		Projectname: requestBody["projectname"].(string),
+		Projectlead: leader,
+		Files:       nil,
+		Teams:       nil,
+		Users:       nil}
+
+	err = data.AddProject(project)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func getProject(w http.ResponseWriter, req *http.Request) {
-
 	project, err := data.GetProject(req.FormValue("projectname"))
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ProjectJson{true, []data.Project{*project}})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	//build the response
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.ProjectJson{true, []data.Project{*project}})
+
 }
 
 func deleteProject(w http.ResponseWriter, req *http.Request) {
 
 	err := data.DeleteProject(req.FormValue("projectname"))
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func editProject(w http.ResponseWriter, req *http.Request) {
 	var requestBody map[string]interface{}
 
-	decErr := json.NewDecoder(req.Body).Decode(&requestBody)
-	if decErr == nil {
-
-		var leader data.User
-
-		mapstructure.Decode(requestBody["projectlead"], &leader)
-
-		project := &data.Project{
-			Projectname: requestBody["projectname"].(string),
-			Projectlead: leader,
-			Files:       nil,
-			Teams:       nil,
-			Users:       nil}
-
-		err := data.EditProject(project)
-
-		if err == nil {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.Json{true})
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, decErr.Error()})
-
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	var leader data.User
+
+	mapstructure.Decode(requestBody["projectlead"], &leader)
+
+	project := &data.Project{
+		Projectname: requestBody["projectname"].(string),
+		Projectlead: leader,
+		Files:       nil,
+		Teams:       nil,
+		Users:       nil}
+
+	err = data.EditProject(project)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func addFiles(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
+
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
 
 	var files []data.File
 
-	filenames := strings.Split(req.FormValue("files"), ",")
+	mapstructure.Decode(requestBody["files"], &files)
 
-	for _, filename := range filenames {
-		file, err := data.GetFile(filename)
-		if err == nil {
-			files = append(files, *file)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}
+	var filenames []string
+
+	for _, file := range files {
+		filenames = append(filenames, file.Filename)
 	}
 
-	err := data.AddFiles(req.FormValue("projectname"), &files)
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	err = data.AddFiles(requestBody["projectname"].(string), &filenames)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func addTeams(w http.ResponseWriter, req *http.Request) {
 
+	var requestBody map[string]interface{}
+
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
 	var teams []data.Team
 
-	teamnames := strings.Split(req.FormValue("teams"), ",")
+	mapstructure.Decode(requestBody["teams"], &teams)
 
-	for _, teamname := range teamnames {
-		team, err := data.GetTeam(teamname)
-		if err == nil {
-			teams = append(teams, *team)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}
+	var teamnames []string
+
+	for _, team := range teams {
+		teamnames = append(teamnames, team.Teamname)
 	}
 
-	err := data.AddTeams(req.FormValue("projectname"), &teams)
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	err = data.AddTeams(requestBody["projectname"].(string), &teamnames)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func addUsers(w http.ResponseWriter, req *http.Request) {
 
+	var requestBody map[string]interface{}
+
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
 	var users []data.User
 
-	usernames := strings.Split(req.FormValue("users"), ",")
+	mapstructure.Decode(requestBody["users"], &users)
 
-	for _, username := range usernames {
-		user, err := data.GetUser(username)
-		if err == nil {
-			users = append(users, *user)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}
+	var usernames []string
+
+	for _, user := range users {
+		usernames = append(usernames, user.Username)
 	}
 
-	err := data.AddUsers(req.FormValue("projectname"), &users)
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	err = data.AddUsers(requestBody["projectname"].(string), &usernames)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func removeFiles(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
+
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
 
 	var files []data.File
 
-	filenames := strings.Split(req.FormValue("files"), ",")
+	mapstructure.Decode(requestBody["files"], &files)
 
-	for _, filename := range filenames {
-		file, err := data.GetFile(filename)
-		if err == nil {
-			files = append(files, *file)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}
+	var filenames []string
+
+	for _, file := range files {
+		filenames = append(filenames, file.Filename)
 	}
 
-	err := data.RemoveFiles(req.FormValue("projectname"), &files)
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	err = data.RemoveFiles(requestBody["projectname"].(string), &filenames)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func removeTeams(w http.ResponseWriter, req *http.Request) {
 
+	var requestBody map[string]interface{}
+
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
 	var teams []data.Team
 
-	teamnames := strings.Split(req.FormValue("teams"), ",")
+	mapstructure.Decode(requestBody["teams"], &teams)
 
-	for _, teamname := range teamnames {
-		team, err := data.GetTeam(teamname)
-		if err == nil {
-			teams = append(teams, *team)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}
+	var teamnames []string
+
+	for _, team := range teams {
+		teamnames = append(teamnames, team.Teamname)
 	}
 
-	err := data.RemoveTeams(req.FormValue("projectname"), &teams)
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	err = data.RemoveTeams(requestBody["projectname"].(string), &teamnames)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func removeUsers(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
+
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
 
 	var users []data.User
 
-	usernames := strings.Split(req.FormValue("users"), ",")
+	mapstructure.Decode(requestBody["users"], &users)
 
-	for _, username := range usernames {
-		user, err := data.GetUser(username)
-		if err == nil {
-			users = append(users, *user)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
-		}
+	var usernames []string
+
+	for _, user := range users {
+		usernames = append(usernames, user.Username)
 	}
 
-	err := data.RemoveUsers(req.FormValue("projectname"), &users)
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	err = data.AddUsers(requestBody["projectname"].(string), &usernames)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
 }
 
 func deleteProjects(w http.ResponseWriter, req *http.Request) {
 	err := data.DeleteProjects()
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.Json{true})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
 
 func getAll(w http.ResponseWriter, req *http.Request) {
 	projects, err := data.GetProjects()
-
-	if err == nil {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ProjectJson{true, *projects})
-	} else {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(data.ErrorJson{false, err.Error()})
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.ProjectJson{true, *projects})
 }

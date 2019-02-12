@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"errors"
 
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
@@ -41,7 +42,7 @@ func GetUser(strings ...string) (*User, error) {
 	err := usersCollection.FindOne(context.TODO(), filter).Decode(&result)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error finding data for user : '" + strings[0] + "'")
 	} else {
 		return &result, nil
 	}
@@ -53,7 +54,7 @@ func DeleteUser(username string) error {
 	_, err := usersCollection.DeleteOne(context.TODO(), filter)
 
 	if err != nil {
-		return err
+		return errors.New("error trying to delete user : '" + username + "'")
 	} else {
 		return nil
 	}
@@ -66,7 +67,7 @@ func EditUser(new *User) error {
 
 	err := usersCollection.FindOneAndReplace(context.TODO(), filter, new).Decode(&result)
 	if err != nil {
-		return err
+		return errors.New("error updating user : '" + new.Username + "'")
 	} else {
 		return nil
 	}
@@ -76,7 +77,7 @@ func DeleteUsers() error { //empty bson object is like a wildcard
 	_, err := usersCollection.DeleteMany(context.TODO(), bson.M{})
 
 	if err != nil {
-		return err
+		return errors.New("error deleting all users")
 	} else {
 		return nil
 	}
@@ -89,7 +90,7 @@ func GetUsers() (*[]User, error) {
 	defer cursor.Close(context.TODO())
 
 	if err != nil {
-		return &users, err
+		return &users, errors.New("error getting all users")
 	} else {
 		var elem User
 		for cursor.Next(context.TODO()) {
@@ -101,5 +102,5 @@ func GetUsers() (*[]User, error) {
 			}
 		}
 	}
-	return &users, err
+	return &users, nil
 }
