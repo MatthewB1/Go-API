@@ -3,32 +3,102 @@
 package main
 
 import (
-	"routes/userAdministration"
+	"fmt"
+	"log"
+	"os/exec"
 	"routes/auth"
+	"routes/userAdministration"
 
 	// "fmt"
-	"context"
 	"bytes"
-    "time"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	
-	"github.com/mongodb/mongo-go-driver/mongo"
-	"github.com/mongodb/mongo-go-driver/bson"
+	"time"
+
 	"github.com/gorilla/mux"
+	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
 //helper function to return a new server, reduces code duplication
-func newServer(r http.Handler, addr string) *http.Server{
-return &http.Server{
-        Addr:         addr,
-        WriteTimeout: time.Second * 15,
-        ReadTimeout:  time.Second * 15,
-        IdleTimeout:  time.Second * 60,
-        Handler: r, 
+func newServer(r http.Handler, addr string) *http.Server {
+	return &http.Server{
+		Addr:         addr,
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      r,
 	}
+}
+
+var client *mongo.Client
+var usersCollection *mongo.Collection
+var teamsCollection *mongo.Collection
+var filesCollection *mongo.Collection
+var projectsCollection *mongo.Collection
+
+func TestMain(m *testing.M) {
+	// SETUP
+	fmt.Printf("running setup....\n")
+	err := setup()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("running tests....\n")
+	//RUN TESTS
+	m.Run()
+
+	fmt.Printf("running teardown....\n")
+	//TEARDOWN
+	err = teardown()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func setup() error {
+	_, err := exec.Command("go", "run", "../../data/populate.go").Output()
+	if err != nil {
+		return err
+	}
+
+	//*************DB connection setup*****************************
+	client, err = mongo.Connect(context.TODO(), "mongodb://localhost:27017")
+	if err != nil {
+		return err
+	}
+
+	usersCollection = client.Database("db").Collection("users")
+	teamsCollection = client.Database("db").Collection("teams")
+	filesCollection = client.Database("db").Collection("files")
+	projectsCollection = client.Database("db").Collection("projects")
+
+	return nil
+}
+
+func teardown() error {
+	//drop collections
+	err := usersCollection.Drop(context.TODO())
+	if err != nil {
+		return err
+	}
+	err = teamsCollection.Drop(context.TODO())
+	if err != nil {
+		return err
+	}
+	err = filesCollection.Drop(context.TODO())
+	if err != nil {
+		return err
+	}
+	err = projectsCollection.Drop(context.TODO())
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //****************HTTP request tests*****************************
@@ -38,18 +108,18 @@ return &http.Server{
 //1. that a valid server object is created
 //2. that the server begins listening
 //3. that the server is closed successfully
-func TestStartServerAndListen(t *testing.T){
+func TestStartServerAndListen(t *testing.T) {
 	r := mux.NewRouter()
 
 	srv := newServer(r, "0.0.0.0:8001")
-	
+
 	if srv == nil {
 		t.Errorf("Error creating server")
 	}
-	
+
 	go func() {
-        if err := srv.ListenAndServe(); err != nil {
-            t.Errorf("Error listening: %v", err)
+		if err := srv.ListenAndServe(); err != nil {
+			t.Errorf("Error listening: %v", err)
 		}
 		err := srv.Close()
 
@@ -59,31 +129,30 @@ func TestStartServerAndListen(t *testing.T){
 	}()
 }
 
-
 //starts a server, and fires a GET query to get all user data
 //assertions:
 //1. that the server started listening ok
 //2. response code is ok
 //3. response could be decoded
 //4. repsonse included value 'true' for key "Success"
-func TestGetRequest (t *testing.T) {
+func TestGetRequest(t *testing.T) {
 	r := mux.NewRouter()
 	userAdministration.SubRouter(r)
 
-	srv :=newServer(r, "0.0.0.0:8002")
-	
+	srv := newServer(r, "0.0.0.0:8002")
+
 	go func() {
-        if err := srv.ListenAndServe(); err != nil {
-            t.Errorf("Error listening: %v", err)
+		if err := srv.ListenAndServe(); err != nil {
+			t.Errorf("Error listening: %v", err)
 		}
 		defer srv.Close()
 	}()
-	
-	resp,err := http.Get(httptest.NewServer(r).URL + "/api/userAdministration/users")
+
+	resp, err := http.Get(httptest.NewServer(r).URL + "/api/userAdministration/users")
 	if err != nil {
 		t.Fatalf("error sending request : %v", err)
 	}
-	
+
 	var response map[string]interface{}
 
 	err = json.NewDecoder(resp.Body).Decode(&response)
@@ -96,7 +165,6 @@ func TestGetRequest (t *testing.T) {
 		t.Errorf("Error decoding response : %s", err)
 	}
 
-	
 	if response["Success"] != true {
 		t.Errorf("Unexpected response : \n%v\n", response)
 	}
@@ -110,15 +178,15 @@ func TestGetRequest (t *testing.T) {
 //4. response code is ok
 //5. response could be decoded
 //6. repsonse included value 'true' for key "Success"
-func TestPostRequest (t *testing.T) {
+func TestPostRequest(t *testing.T) {
 	r := mux.NewRouter()
 	auth.SubRouter(r)
 
-	srv :=newServer(r, "0.0.0.0:8003")
-	
+	srv := newServer(r, "0.0.0.0:8003")
+
 	go func() {
-        if err := srv.ListenAndServe(); err != nil {
-            t.Errorf("Error listening: %v", err)
+		if err := srv.ListenAndServe(); err != nil {
+			t.Errorf("Error listening: %v", err)
 		}
 		defer srv.Close()
 	}()
@@ -128,9 +196,9 @@ func TestPostRequest (t *testing.T) {
 	if jsonErr != nil {
 		t.Errorf("Error creating json structure : %v", jsonErr)
 	}
-	
-	resp,err := http.Post(httptest.NewServer(r).URL + "/api/auth/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil { 
+
+	resp, err := http.Post(httptest.NewServer(r).URL+"/api/auth/login", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
 		t.Fatalf("error sending request : %v", err)
 	}
 
@@ -151,13 +219,13 @@ func TestPostRequest (t *testing.T) {
 	}
 }
 
-
 //****************CRUD tests*****************************
 //data model to decode results into
 type Data struct {
 	Name string
 	Food string
 }
+
 //defines a client and collection, drops all data from the collection
 //then adds a collection, and deletes that same collection
 //assertions:
@@ -168,7 +236,7 @@ type Data struct {
 //5. count is 1 after insertion
 //6. document is deleted
 //7. count is 0 after deletion
-func TestAddDeleteData (t *testing.T) {
+func TestAddDeleteData(t *testing.T) {
 	//setup client and collection
 	client, err := mongo.Connect(context.TODO(), "mongodb://localhost:27017")
 	if err != nil {
@@ -231,6 +299,7 @@ func TestAddDeleteData (t *testing.T) {
 		t.Errorf("Error getting count after delete : %s", postDeleteErr)
 	}
 }
+
 //defines a client and collection, drops all data from the collection
 //then adds a collection, and deletes that same collection
 //assertions:
@@ -244,7 +313,7 @@ func TestAddDeleteData (t *testing.T) {
 //8. document is updated correctly
 //9. document is retrieved correctly
 //10. edited field has been reflected in database
-func TestUpdateData (t *testing.T) {
+func TestUpdateData(t *testing.T) {
 	//setup client and collection
 	client, err := mongo.Connect(context.TODO(), "mongodb://localhost:27017")
 	if err != nil {

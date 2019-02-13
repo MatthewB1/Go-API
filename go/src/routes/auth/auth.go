@@ -3,6 +3,7 @@ package auth
 import (
 	"data"
 	"encoding/json"
+	"errors"
 	"net/http"
 	utils "routes"
 
@@ -29,7 +30,7 @@ func login(w http.ResponseWriter, req *http.Request) {
 
 	_, err = data.GetUser(requestBody["username"].(string), requestBody["password"].(string))
 	if err != nil {
-		utils.RespondWithError(w, err)
+		utils.RespondWithError(w, errors.New("Unable to authenticate"))
 		return
 	}
 

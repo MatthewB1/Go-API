@@ -1,19 +1,18 @@
 package main
 
 import (
-	"routes/userAdministration"
-	"routes/teamAdministration"
-	"routes/projectAdministration"
-	"routes/fileAdministration"
-	"routes/auth"
 	"middleware"
-
+	"routes/auth"
+	"routes/fileAdministration"
+	"routes/projectAdministration"
+	"routes/teamAdministration"
+	"routes/userAdministration"
 
 	"log"
 	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	
 )
 
 func main() {
@@ -26,12 +25,11 @@ func main() {
 	projectAdministration.SubRouter(router)
 	auth.SubRouter(router)
 
-
 	//attach middlewares
 	middleware.AttachMiddleware(router)
 
 	//accept CORS requests
 	handler := cors.Default().Handler(router)
-	
-    log.Fatal(http.ListenAndServe(":8080", handler))
+
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }

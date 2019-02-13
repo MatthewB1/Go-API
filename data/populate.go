@@ -14,15 +14,25 @@ func main() {
 		log.Fatal(err)
 	}
 
+	//drop collections ahead of populating with test data
 	usersCollection := client.Database("db").Collection("users")
-
 	teamsCollection := client.Database("db").Collection("teams")
+	filesCollection := client.Database("db").Collection("files")
+	projectsCollection := client.Database("db").Collection("projects")
 
 	dropErr := usersCollection.Drop(context.TODO())
 	if dropErr != nil {
 		log.Fatal(err)
 	}
 	dropErr = teamsCollection.Drop(context.TODO())
+	if dropErr != nil {
+		log.Fatal(err)
+	}
+	dropErr = filesCollection.Drop(context.TODO())
+	if dropErr != nil {
+		log.Fatal(err)
+	}
+	dropErr = projectsCollection.Drop(context.TODO())
 	if dropErr != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +51,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Inserted multiple documents: ", insertManyResult.InsertedIDs)
+	fmt.Println("Inserted multiple user documents: ", insertManyResult.InsertedIDs)
 
 	//insert teams
 
@@ -55,7 +65,33 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Inserted multiple documents: ", insertManyResult.InsertedIDs)
+	fmt.Println("Inserted multiple team documents: ", insertManyResult.InsertedIDs)
+
+	//insert files
+
+	coffee := &File{Filename: "coffee.jpg", Versions: []Version{Version{Lastsaved: "13/02/2019", Lasteditor: "Dave", TotaleditTime: "12312", Tags: []string{"tasty", "black", "hot"}}}}
+	bovril := &File{Filename: "bovril.jpg", Versions: []Version{Version{Lastsaved: "13/02/2019", Lasteditor: "Steve", TotaleditTime: "45451", Tags: []string{"disgustang", "dunno what it is", "james may"}}, Version{Lastsaved: "13/02/2019", Lasteditor: "Steve", TotaleditTime: "3234", Tags: []string{"disgustang", "dunno what it is", "james may", "gravy?"}}}}
+
+	files := []interface{}{coffee, bovril}
+
+	insertManyResult, err = filesCollection.InsertMany(context.TODO(), files)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Inserted multiple file documents: ", insertManyResult.InsertedIDs)
+
+	//insert projects
+	project := &Project{Projectname: "lunch", Projectlead: "Dan", Files: []string{coffee.Filename, bovril.Filename}, Teams: []string{petrels.Teamname}, Users: []string{matthew.Username}}
+
+	projects := []interface{}{project}
+
+	insertManyResult, err = projectsCollection.InsertMany(context.TODO(), projects)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Inserted multiple project documents: ", insertManyResult.InsertedIDs)
 
 }
 
@@ -85,4 +121,51 @@ type Team struct {
 	Teamname    string   `json:"teamname"`
 	Teamleader  string   `json:"teamleader"`
 	TeamMembers []string `json:"teamMembers"`
+}
+
+/*
+{
+    "projectname": "",
+    "projectlead": "",
+    "teams": [],
+    "users": []
+}
+*/
+
+type Project struct {
+	//ID    bson.ObjectId `bson:"_id, omitempty"`
+	Projectname string   `json:"projectname`
+	Projectlead string   `json:"projectlead`
+	Files       []string `json:"files"`
+	Teams       []string `json:"teams"`
+	Users       []string `json:"users"`
+}
+
+/*
+{
+	"filename": "",
+	"versions" :
+    [
+        {
+        "lastsaved": "",
+        "lasteditor": "",
+        "versionNo": "",
+        "totalEditTime": "",
+        "tags": []
+        }
+    ]
+}
+*/
+
+type File struct {
+	Filename string    `json:"filename"`
+	Versions []Version `json:"versions"`
+}
+
+type Version struct {
+	//ID    bson.ObjectId `bson:"_id, omitempty"`
+	Lastsaved     string   `json:"lastsaved"` //maybe change to time.Time
+	Lasteditor    string   `json:"lasteditor"`
+	TotaleditTime string   `json:"totaleditTime"`
+	Tags          []string `json:"tags"`
 }

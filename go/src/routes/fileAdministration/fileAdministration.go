@@ -3,6 +3,7 @@ package fileAdministration
 import (
 	"data"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	utils "routes"
@@ -32,6 +33,14 @@ func addFile(w http.ResponseWriter, req *http.Request) {
 		utils.RespondWithError(w, err)
 		return
 	}
+
+	file, err := data.GetFile(requestBody["filename"].(string))
+
+	if file != nil {
+		utils.RespondWithError(w, errors.New("a file with filename '"+requestBody["filename"].(string)+"' already exists."))
+		return
+	}
+
 	//map[string]interface{}
 	versionsBody := requestBody["versions"]
 
@@ -61,7 +70,7 @@ func addFile(w http.ResponseWriter, req *http.Request) {
 		tags = nil
 	}
 
-	file := &data.File{
+	file = &data.File{
 		Filename: requestBody["filename"].(string),
 		Versions: versions}
 

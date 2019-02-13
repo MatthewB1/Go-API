@@ -88,7 +88,7 @@ func getTeam(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response, err := BuildTeamResponse([]data.Team{*team})
+	response, err := data.BuildTeamResponse([]data.Team{*team})
 	if err != nil {
 		utils.RespondWithError(w, err)
 		return
@@ -158,7 +158,7 @@ func getAll(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response, err := BuildTeamResponse(*teams)
+	response, err := data.BuildTeamResponse(*teams)
 	if err != nil {
 		utils.RespondWithError(w, err)
 		return
@@ -166,28 +166,4 @@ func getAll(w http.ResponseWriter, req *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data.TeamJson{true, response})
-}
-
-func BuildTeamResponse(teams []data.Team) ([]data.TeamResponse, error) {
-
-	var response []data.TeamResponse
-
-	for _, team := range teams {
-		leader, err := data.GetUser(team.Teamleader)
-		if err != nil {
-			return nil, err
-		}
-		var members []data.User
-
-		for _, username := range team.TeamMembers {
-			member, err := data.GetUser(username)
-			if err != nil {
-				return nil, err
-			}
-			members = append(members, *member)
-		}
-		response = append(response, data.TeamResponse{Teamname: team.Teamname, Teamleader: *leader, TeamMembers: members})
-	}
-
-	return response, nil
 }

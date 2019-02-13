@@ -3,6 +3,7 @@ package projectAdministration
 import (
 	"data"
 	"encoding/json"
+	"errors"
 	"net/http"
 	utils "routes"
 
@@ -39,13 +40,20 @@ func addProject(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	project, err := data.GetProject(requestBody["projectname"].(string))
+
+	if project != nil {
+		utils.RespondWithError(w, errors.New("a project with projectname '"+requestBody["projectname"].(string)+"' already exists."))
+		return
+	}
+
 	var leader data.User
 
 	mapstructure.Decode(requestBody["projectlead"], &leader)
 
-	project := &data.Project{
+	project = &data.Project{
 		Projectname: requestBody["projectname"].(string),
-		Projectlead: leader,
+		Projectlead: leader.Username,
 		Files:       nil,
 		Teams:       nil,
 		Users:       nil}
@@ -69,9 +77,13 @@ func getProject(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//build the response
-
+	response, err := data.BuildProjectResponse([]data.Project{*project})
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(data.ProjectJson{true, []data.Project{*project}})
+	json.NewEncoder(w).Encode(data.ProjectJson{true, response})
 
 }
 
@@ -103,7 +115,7 @@ func editProject(w http.ResponseWriter, req *http.Request) {
 
 	project := &data.Project{
 		Projectname: requestBody["projectname"].(string),
-		Projectlead: leader,
+		Projectlead: leader.Username,
 		Files:       nil,
 		Teams:       nil,
 		Users:       nil}
@@ -289,7 +301,7 @@ func removeUsers(w http.ResponseWriter, req *http.Request) {
 		usernames = append(usernames, user.Username)
 	}
 
-	err = data.AddUsers(requestBody["projectname"].(string), &usernames)
+	err = data.RemoveUsers(requestBody["projectname"].(string), &usernames)
 	if err != nil {
 		utils.RespondWithError(w, err)
 		return
@@ -317,6 +329,12 @@ func getAll(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	response, err := data.BuildProjectResponse(*projects)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(data.ProjectJson{true, *projects})
+	json.NewEncoder(w).Encode(data.ProjectJson{true, response})
 }
