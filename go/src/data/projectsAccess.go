@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mongodb/mongo-go-driver/bson"
@@ -20,7 +21,7 @@ func defineProjectsCollection(client *mongo.Client) {
 func AddProject(record *Project) error {
 	_, err := projectsCollection.InsertOne(context.TODO(), record)
 	if err != nil {
-		return err
+		return errors.New("error inserting data for project :  '" + record.Projectname + "'")
 	} else {
 		return nil
 	}
@@ -35,7 +36,7 @@ func GetProject(projectname string) (*Project, error) {
 	err := projectsCollection.FindOne(context.TODO(), filter).Decode(&result)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error finding data for project :  '" + projectname + "'")
 	} else {
 		return &result, nil
 	}
@@ -47,7 +48,7 @@ func DeleteProject(projectname string) error {
 	_, err := projectsCollection.DeleteOne(context.TODO(), filter)
 
 	if err != nil {
-		return err
+		return errors.New("error removing data for  project :  '" + projectname + "'")
 	} else {
 		return nil
 	}
@@ -60,7 +61,7 @@ func EditProject(new *Project) error {
 
 	err := projectsCollection.FindOneAndReplace(context.TODO(), filter, new).Decode(&result)
 	if err != nil {
-		return err
+		return errors.New("error updating data for project :  '" + new.Projectname + "'")
 	} else {
 		return nil
 	}
@@ -79,7 +80,7 @@ func AddFiles(projectname string, files *[]string) error {
 
 	err = projectsCollection.FindOneAndReplace(context.TODO(), filter, update).Decode(&result)
 	if err != nil {
-		return err
+		return errors.New("error adding files to project :  '" + projectname + "'")
 	} else {
 		return nil
 	}
@@ -98,7 +99,7 @@ func AddTeams(projectname string, teams *[]string) error {
 
 	err = projectsCollection.FindOneAndReplace(context.TODO(), filter, update).Decode(&result)
 	if err != nil {
-		return err
+		return errors.New("error adding teams to project :  '" + projectname + "'")
 	} else {
 		return nil
 	}
@@ -117,7 +118,7 @@ func AddUsers(projectname string, users *[]string) error {
 
 	err = projectsCollection.FindOneAndReplace(context.TODO(), filter, update).Decode(&result)
 	if err != nil {
-		return err
+		return errors.New("error adding users to project :  '" + projectname + "'")
 	} else {
 		return nil
 	}
@@ -140,7 +141,7 @@ func RemoveFiles(projectname string, files *[]string) error {
 
 	err = projectsCollection.FindOneAndReplace(context.TODO(), filter, update).Decode(&result)
 	if err != nil {
-		return err
+		return errors.New("error removing files from project :  '" + projectname + "'")
 	} else {
 		return nil
 	}
@@ -163,7 +164,7 @@ func RemoveTeams(projectname string, teams *[]string) error {
 
 	err = projectsCollection.FindOneAndReplace(context.TODO(), filter, update).Decode(&result)
 	if err != nil {
-		return err
+		return errors.New("error removing teams from project :  '" + projectname + "'")
 	} else {
 		return nil
 	}
@@ -186,7 +187,8 @@ func RemoveUsers(projectname string, users *[]string) error {
 
 	err = projectsCollection.FindOneAndReplace(context.TODO(), filter, update).Decode(&result)
 	if err != nil {
-		return err
+		return errors.New("error removing users from project :  '" + projectname + "'")
+
 	} else {
 		return nil
 	}
@@ -196,7 +198,7 @@ func DeleteProjects() error { //empty bson object is like a wildcard
 	_, err := projectsCollection.DeleteMany(context.TODO(), bson.M{})
 
 	if err != nil {
-		return err
+		return errors.New("error deleting all projects")
 	} else {
 		return nil
 	}
@@ -209,13 +211,13 @@ func GetProjects() (*[]Project, error) {
 	defer cursor.Close(context.TODO())
 
 	if err != nil {
-		return &projects, err
+		return &projects, errors.New("error getting data for all projects")
 	} else {
 		var elem Project
 		for cursor.Next(context.TODO()) {
 			err := cursor.Decode(&elem)
 			if err != nil {
-				return &projects, err
+				return &projects, errors.New("error while getting data for all projects : error decoding project")
 			} else {
 				projects = append(projects, elem)
 			}

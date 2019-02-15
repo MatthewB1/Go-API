@@ -20,7 +20,7 @@ func defineUsersCollection(client *mongo.Client) {
 func AddUser(record *User) error {
 	_, err := usersCollection.InsertOne(context.TODO(), record)
 	if err != nil {
-		return err
+		return errors.New("error inserting data for user : '" + record.Username + "'")
 	} else {
 		return nil
 	}
