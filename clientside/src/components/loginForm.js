@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Route, Redirect } from    'react-router-dom';
 
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
@@ -31,11 +32,17 @@ class LoginFormComponent extends Component {
     handleSubmit = (event) => {
         //Make a network call somewhere
         console.log(this.state);
-        fetch('/api/userAdministration/users')
+        fetch('/api/auth/login', {method: 'POST', body: JSON.stringify({username: this.state.username, password: this.state.password})})
             .then(data => data.json())
             .then(res => {
-                console.log("test")
-                console.dir(res);
+                if (!res.Success){
+                    console.log(res.Error)
+                }
+                else{
+                    //redirect to dashboard page
+                    const { history } = this.props
+                    history.push('/dashboard')
+                }
                  }
             );
 
@@ -44,6 +51,7 @@ class LoginFormComponent extends Component {
 
     render() {
         const { classes } = this.props;
+        
         return (
             <form onSubmit={this.handleSubmit}>
 
