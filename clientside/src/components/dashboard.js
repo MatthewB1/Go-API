@@ -56,14 +56,17 @@ class DashboardComponent extends Component {
 
     componentDidMount() {
         const token = decode(localStorage.getItem('token'));
-        this.setState({username: token.name, accessLevel : token.admin ?("admin") : ("user")})
+        this.setState({ username: token.name, accessLevel: token.admin ? ("admin") : ("user") })
 
 
-        fetch('/api/projectAdministration/projects?user=' + token.name, { method: 'GET' })
+        fetch('/api/projectAdministration/usersProjects?user=' + token.name, { method: 'GET' })
             .then(data => data.json())
             .then(res => {
                 if (res.Success) {
-                    this.setState({ projects: res.Data});
+                    if (res.Data == null)
+                        this.setState({ projects: [] })
+                    else
+                        this.setState({ projects: res.Data });
                 }
                 else {
                     this.setState({ error: res.Error });
@@ -72,43 +75,16 @@ class DashboardComponent extends Component {
             );
     }
 
-    usersProjects(projects){
-        var usersprojects = [];
-        console.dir(usersprojects)
-
-        for (var project in projects){
-            if (project.Projectlead.username === this.state.username){
-                usersprojects.push(project);
-            }
-            for (var team in project.teams){
-                if (team.teamleader.username === this.state.username){
-                    usersprojects.push(project);
-                }
-                for (var member in team.teamMembers){
-                    if (member.username === this.state.username){
-                        usersprojects.push(project);
-                    }
-                }
-            }
-            for (var user in project.users){
-                if (user.username === this.state.username){
-                    usersprojects.push(project);
-                }
-            }
-        }
-
-        usersprojects.push(projects[0])
-        console.dir(usersprojects);
-        return usersprojects;
-    }
-
     selectProject(value) {
         this.setState({ selectedProject: value })
     }
 
-    handleClick = event => {
-
+    noProjects() {
+        console.log(this.state.projects.length)
+        return (this.state.projects.length === 0);
     }
+
+
 
     render() {
         const { classes } = this.props;
@@ -116,41 +92,67 @@ class DashboardComponent extends Component {
 
         if (this.state.error === null) {
             if (this.state.selectedProject === null) {
-                return (
-                    <div>
-                        <div className={classes.breadcrumbs}>
-                            <Paper className={classes.crumb}>
-                                <Breadcrumbs arial-label="Breadcrumb">
-                                    {/* <Link color="inherit" href="/dashboard" onClick={this.handleClick}>
-                                        dashboard
-                                    </Link> */}
-                                    <Typography color="inherit">dashboard</Typography>
-                                </Breadcrumbs>
-                            </Paper>
-                            <br />
-                        </div>
-                        <Grid container className={classes.root} spacing={16}>
-                            <div style={{ "marginLeft": "auto", "marginRight": "auto" }}>
-                                <h2>Hi {this.state.username}!</h2>
+                if (this.state.projects.length !== 0) {
+                    return (
+                        <div>
+                            <div className={classes.breadcrumbs}>
+                                <Paper className={classes.crumb}>
+                                    <Breadcrumbs arial-label="Breadcrumb">
+                                        <Typography color="inherit">dashboard</Typography>
+                                    </Breadcrumbs>
+                                </Paper>
+                                <br />
                             </div>
-                            <Grid item xs={12}>
-                                <Grid container className={classes.demo} justify="center" spacing={Number(spacing)}>
-                                    {this.state.projects.map(value => (
-                                        <Grid key={value} item>
-                                            <ButtonBase onClick={() => this.selectProject(value)} className={classes.btn}>
-                                                <Paper className={classes.paper}>
-                                                    <Typography gutterBottom variant="display2">
-                                                        {value.Projectname}
-                                                    </Typography>
-                                                </Paper>
-                                            </ButtonBase>
-                                        </Grid>
-                                    ))}
+                            <Grid container className={classes.root} spacing={16}>
+                                <div style={{ "marginLeft": "auto", "marginRight": "auto" }}>
+                                    <h2>Hi {this.state.username}! Your projects: </h2>
+                                </div>
+                                <Grid item xs={12}>
+                                    <Grid container justify="center" spacing={Number(spacing)}>
+                                        {this.state.projects.map(value => (
+                                            <Grid key={value} item>
+                                                <ButtonBase onClick={() => this.selectProject(value)} className={classes.btn}>
+                                                    <Paper className={classes.paper}>
+                                                        <Typography gutterBottom variant="display2">
+                                                            {value.Projectname}
+                                                        </Typography>
+                                                    </Paper>
+                                                </ButtonBase>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
                                 </Grid>
                             </Grid>
-                        </Grid>
-                    </div>
-                );
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div>
+                            <div className={classes.breadcrumbs}>
+                                <Paper className={classes.crumb}>
+                                    <Breadcrumbs arial-label="Breadcrumb">
+                                        <Typography color="inherit">dashboard</Typography>
+                                    </Breadcrumbs>
+                                </Paper>
+                                <br />
+                            </div>
+                            <Grid container className={classes.root} spacing={16}>
+                                <div style={{ "marginLeft": "auto", "marginRight": "auto" }}>
+                                    <h2>Hi {this.state.username}! Your projects: </h2>
+                                </div>
+                                <Grid item xs={12}>
+                                    <Grid container justify="center" spacing={Number(spacing)}>
+                                        <Grid item>
+                                            <Typography gutterBottom variant="display2">
+                                                no projects :~(
+                                            </Typography>
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </div>
+                    );
+                }
             }
             else {
                 return (

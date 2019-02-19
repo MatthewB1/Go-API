@@ -29,6 +29,7 @@ func SubRouter(router *mux.Router) {
 
 	subr.HandleFunc("/projects", deleteProjects).Methods("DELETE")
 	subr.HandleFunc("/projects", getAll).Methods("GET")
+	subr.HandleFunc("/usersProjects", getUsersProjects).Methods("GET")
 }
 
 func addProject(w http.ResponseWriter, req *http.Request) {
@@ -330,6 +331,52 @@ func getAll(w http.ResponseWriter, req *http.Request) {
 	}
 
 	response, err := data.BuildProjectResponse(*projects)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.ProjectJson{true, response})
+}
+
+func getUsersProjects(w http.ResponseWriter, req *http.Request) {
+	projects, err := data.GetProjects()
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
+	var newProjects []data.Project
+
+	user, err := data.GetUser(req.FormValue("user"))
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
+	username := user.Username
+
+	for _, project := range *projects {
+		if project.Projectlead == username {
+			newProjects = append(newProjects, project)
+			continue
+		}
+		for _, user := range project.Users {
+			if user == username {
+				newProjects = append(newProjects, project)
+				continue
+			}
+		}
+		for _, team := range project.Users {
+			if utils.UserInTeam(username, team) {
+				newProjects = append(newProjects, project)
+				continue
+			}
+		}
+	}
+
+	response, err := data.BuildProjectResponse(newProjects)
 	if err != nil {
 		utils.RespondWithError(w, err)
 		return
