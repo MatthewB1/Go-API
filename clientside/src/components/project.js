@@ -79,7 +79,7 @@ class ProjectComponent extends Component {
                     <Grid item xs={12}>
                         <Grid container className={classes.demo} justify="center" spacing={Number(spacing)}>
                             {this.state.project.files.map(value => (
-                                <Grid key={value} item>
+                                <Grid key={value.filename} item>
                                     <ButtonBase onClick={() => this.selectFile(value)} className={classes.btn}>
                                         <Paper className={classes.paper}>
                                             <Typography gutterBottom variant="display2">

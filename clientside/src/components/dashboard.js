@@ -10,6 +10,8 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 
 import Breadcrumbs from '@material-ui/lab/Breadcrumbs';
 
+import decode from 'jwt-decode';
+
 
 import ProjectComponent from './project'
 
@@ -44,6 +46,8 @@ class DashboardComponent extends Component {
         super(props);
         this.state = {
             spacing: '16',
+            username: '',
+            accessLevel: '',
             error: null,
             projects: [],
             selectedProject: null
@@ -51,17 +55,51 @@ class DashboardComponent extends Component {
     }
 
     componentDidMount() {
-        fetch('/api/projectAdministration/projects', { method: 'GET' })
+        const token = decode(localStorage.getItem('token'));
+        this.setState({username: token.name, accessLevel : token.admin ?("admin") : ("user")})
+
+
+        fetch('/api/projectAdministration/projects?user=' + token.name, { method: 'GET' })
             .then(data => data.json())
             .then(res => {
                 if (res.Success) {
-                    this.setState({ projects: res.Data });
+                    this.setState({ projects: res.Data});
                 }
                 else {
                     this.setState({ error: res.Error });
                 }
             }
             );
+    }
+
+    usersProjects(projects){
+        var usersprojects = [];
+        console.dir(usersprojects)
+
+        for (var project in projects){
+            if (project.Projectlead.username === this.state.username){
+                usersprojects.push(project);
+            }
+            for (var team in project.teams){
+                if (team.teamleader.username === this.state.username){
+                    usersprojects.push(project);
+                }
+                for (var member in team.teamMembers){
+                    if (member.username === this.state.username){
+                        usersprojects.push(project);
+                    }
+                }
+            }
+            for (var user in project.users){
+                if (user.username === this.state.username){
+                    usersprojects.push(project);
+                }
+            }
+        }
+
+        usersprojects.push(projects[0])
+        console.dir(usersprojects);
+        return usersprojects;
     }
 
     selectProject(value) {
@@ -93,7 +131,7 @@ class DashboardComponent extends Component {
                         </div>
                         <Grid container className={classes.root} spacing={16}>
                             <div style={{ "marginLeft": "auto", "marginRight": "auto" }}>
-                                <h2>Your projects</h2>
+                                <h2>Hi {this.state.username}!</h2>
                             </div>
                             <Grid item xs={12}>
                                 <Grid container className={classes.demo} justify="center" spacing={Number(spacing)}>

@@ -47,13 +47,26 @@ class FileComponent extends Component {
             file: props.file,
             selectedFile: null
         };
-        console.dir(props.file)
     }
+
 
     handleClick() {
         this.setState({file: null})
     }
 
+    onUnload(event) { // the method that will be used for both add and remove event
+        console.log("hellooww")
+        event.returnValue = "Hellooww"
+    }
+
+    componentDidMount() {
+        window.addEventListener("beforeunload", this.onUnload)
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("beforeunload", this.onUnload)
+    }
+    
     render() {
         const { classes } = this.props;
         // const { spacing } = this.state;

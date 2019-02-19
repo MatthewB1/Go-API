@@ -7,8 +7,8 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button'
-import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
-import ButtonBase from '@material-ui/core/ButtonBase';
+// import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
+// import ButtonBase from '@material-ui/core/ButtonBase';
 
 
 const styles = {
@@ -40,8 +40,10 @@ class MainContentComponent extends Component {
         history.push('/login')
     }
 
-    goBack(){
-        //dunno
+    componentWillMount(){
+        //no reason to ever go to this url, send user to dashboard
+        const { history } = this.props
+        history.push('/dashboard')
     }
 
     render(){

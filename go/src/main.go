@@ -23,10 +23,11 @@ func main() {
 	teamAdministration.SubRouter(router)
 	fileAdministration.SubRouter(router)
 	projectAdministration.SubRouter(router)
-	auth.SubRouter(router)
 
 	//attach middlewares
 	middleware.AttachMiddleware(router)
+
+	auth.SubRouter(router)
 
 	//accept CORS requests
 	handler := cors.Default().Handler(router)

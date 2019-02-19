@@ -10,7 +10,6 @@ import './App.css';
 
 const checkAuth = () => {
   const token = localStorage.getItem('token');
-  console.dir(token)
   //if no token, return false
   if (!token) {
     console.log("no token set")
@@ -18,7 +17,6 @@ const checkAuth = () => {
   }
 
   try {
-    console.dir(decode(token));
     const { exp } = decode(token, {header:true});
 
     //check exp against current time, if expired return false
