@@ -1,11 +1,15 @@
 import React, { Component } from 'react';
 
+
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button'
+import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
+import ButtonBase from '@material-ui/core/ButtonBase';
+
 
 const styles = {
     root: {
@@ -30,16 +34,29 @@ class MainContentComponent extends Component {
         this.state = {};
     }
 
+    logout(){
+        localStorage.setItem('token', '')
+        const { history } = this.props
+        history.push('/login')
+    }
+
+    goBack(){
+        //dunno
+    }
+
     render(){
         const { classes } = this.props;
         return (
             <div >
                 <AppBar className= {classes.appBar} position="static">
                     <Toolbar>
+                        {/* <ButtonBase onClick={() => this.goBack()} className={classes.btn}>
+                        <ArrowBackIosIcon className={classes.icon} />
+                        </ButtonBase> */}
                         <Typography variant="h6" color="inherit" className={classes.grow}>
                             TMS
                          </Typography>
-                        <Button id="logoutButton" ref="logoutButton" color="inherit">Logout</Button>
+                        <Button id="logoutButton" onClick={() => this.logout()} ref="logoutButton" color="inherit">Logout</Button>
                     </Toolbar>
                 </AppBar>
             </div>

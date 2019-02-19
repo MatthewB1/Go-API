@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import { Route, Redirect } from    'react-router-dom';
 
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField'
+import { red } from '@material-ui/core/colors';
 
 const styles = {
     root: {
@@ -16,6 +16,9 @@ const styles = {
     block: {
         display: "block",
     },
+    errormessage: {
+        color: red,
+    },
 };
 
 class LoginFormComponent extends Component {
@@ -23,27 +26,28 @@ class LoginFormComponent extends Component {
         super(props);
         this.state = {
             username: '',
-            password: ''
+            password: '',
+            error: false
         };
     };
     handleChange = (input) => event => {
-        this.setState({ [input]: event.target.value })
+        this.setState({ [input]: event.target.value, error: null })
     };
     handleSubmit = (event) => {
-        //Make a network call somewhere
-        console.log(this.state);
-        fetch('/api/auth/login', {method: 'POST', body: JSON.stringify({username: this.state.username, password: this.state.password})})
+        fetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: this.state.username, password: this.state.password }) })
             .then(data => data.json())
             .then(res => {
-                if (!res.Success){
-                    console.log(res.Error)
+                if (!res.Success) {
+                    //set error status to true, makes form red
+                    this.setState({error: true})
                 }
-                else{
-                    //redirect to dashboard page
+                else {
+                    //store token and send on to dashboard
+                    localStorage.setItem('token', res.Data.token)
                     const { history } = this.props
                     history.push('/dashboard')
                 }
-                 }
+            }
             );
 
         event.preventDefault();
@@ -51,12 +55,13 @@ class LoginFormComponent extends Component {
 
     render() {
         const { classes } = this.props;
-        
+
         return (
             <form onSubmit={this.handleSubmit}>
 
                 <h2>Login</h2>
                 <TextField
+                    error={this.state.error}
                     id="login-username"
                     label="Username"
                     placeholder="Username"
@@ -68,6 +73,7 @@ class LoginFormComponent extends Component {
                 <br></br>
 
                 <TextField
+                    error={this.state.error}
                     id="login-password"
                     label="Password"
                     className={classes.textField}
@@ -82,6 +88,8 @@ class LoginFormComponent extends Component {
                 <Button variant="outlined" className={classes.button} label="submit" type="submit">
                     Login
                 </Button>
+
+                <p hidden={!this.state.error} className={classes.errormessage}>unable to authenticate</p>
             </form>
         )
     }

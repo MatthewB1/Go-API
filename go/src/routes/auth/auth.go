@@ -6,7 +6,9 @@ import (
 	"errors"
 	"net/http"
 	utils "routes"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/mongodb/mongo-go-driver/bson"
 )
@@ -28,14 +30,17 @@ func login(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, err = data.GetUser(requestBody["username"].(string), requestBody["password"].(string))
+	user, err := data.GetUser(requestBody["username"].(string), requestBody["password"].(string))
 	if err != nil {
 		utils.RespondWithError(w, errors.New("Unable to authenticate"))
 		return
 	}
 
+	tokenString, err := newToken(user.AccessLevel, user.Username)
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(data.Json{true})
+	// w.Write([]byte(tokenString))
+	json.NewEncoder(w).Encode(data.DataJson{true, bson.M{"token": tokenString}})
 }
 
 func getAccessLevel(w http.ResponseWriter, req *http.Request) {
@@ -48,4 +53,23 @@ func getAccessLevel(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data.DataJson{true, bson.M{"accessLevel": user.AccessLevel}})
 
+}
+
+var mySigningKey = []byte("secret")
+
+func newToken(accessLevel string, username string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	//store claims in map
+	claims := token.Claims.(jwt.MapClaims)
+
+	//set claims
+	claims["admin"] = (accessLevel == "admin")
+	claims["name"] = username
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+
+	//sign with secret
+	tokenString, err := token.SignedString(mySigningKey)
+
+	return tokenString, err
 }

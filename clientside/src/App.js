@@ -3,8 +3,49 @@ import MainContentComponent from './components/mainContent'
 import LoginFormComponent from './components/loginForm'
 import DashboardComponent from './components/dashboard'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
-import logo from './logo.svg';
+import { Redirect } from 'react-router-dom'
+import decode from 'jwt-decode';
 import './App.css';
+
+
+const checkAuth = () => {
+  const token = localStorage.getItem('token');
+  console.dir(token)
+  //if no token, return false
+  if (!token) {
+    console.log("no token set")
+    return false;
+  }
+
+  try {
+    console.dir(decode(token));
+    const { exp } = decode(token, {header:true});
+
+    //check exp against current time, if expired return false
+    if (exp < new Date().getTime() / 1000) {
+      console.log("token invalid")
+      return false;
+    }
+
+  } catch (e) {
+    console.log("caught error : " + e)
+    return false;
+  }
+
+  return true;
+}
+
+const AuthRoute = ({ component: Component, ...rest }) => (
+  <Route {...rest} render={props => (
+    //check token auth, if valid continue to content
+    checkAuth() ? (
+      <Component {...props} />
+    ) : (
+      //else, redirect to login
+        <Redirect to={{ pathname: '/login' }} />
+      )
+  )} />
+)
 
 class App extends Component {
   render() {
@@ -12,8 +53,8 @@ class App extends Component {
       <Router>
         <div className='App'>
         <Route path='/'component={MainContentComponent}></Route>
-        <Route path='/login' component={LoginFormComponent}></Route>
-        <Route path='/dashboard' component={DashboardComponent}></Route>
+        <Route exact path='/login' component={LoginFormComponent}></Route>
+        <AuthRoute exact path='/dashboard' component={DashboardComponent}></AuthRoute>
         </div>
       </Router>
     ));
