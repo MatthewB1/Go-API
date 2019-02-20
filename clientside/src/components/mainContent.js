@@ -25,6 +25,7 @@ const styles = {
     appBar: {
         backgroundColor: "#b29600",
     },
+    
 };
 
 class MainContentComponent extends Component {

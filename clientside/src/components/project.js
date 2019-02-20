@@ -12,9 +12,48 @@ import Breadcrumbs from '@material-ui/lab/Breadcrumbs';
 import Link from '@material-ui/core/Link';
 import FileComponent from './file'
 
+import Icon from '@material-ui/core/Icon'
+
+import Dialog from '@material-ui/core/Dialog';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+
+
+import Avatar from '@material-ui/core/Avatar';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+import ListItemText from '@material-ui/core/ListItemText';
+import PersonIcon from '@material-ui/icons/Person';
+
+import ListSubheader from '@material-ui/core/ListSubheader';
+
 const styles = theme => ({
     root: {
         flexGrow: 1,
+    },
+    listSection: {
+        backgroundColor: 'inherit',
+    },
+    ul: {
+        backgroundColor: 'inherit',
+        padding: 0,
+    },
+
+    listroot: {
+        width: '100%',
+        maxWidth: 360,
+        backgroundColor: theme.palette.background.paper,
+        position: 'relative',
+        overflow: 'auto',
+        maxHeight: 300,
+    },
+    title: {
+        minWidth: 350,
     },
     paper: {
         height: 180,
@@ -44,13 +83,59 @@ class ProjectComponent extends Component {
         this.state = {
             spacing: '16',
             error: null,
+            formError: null,
             project: props.project,
-            selectedFile: null
+            selectedFile: null,
+            newFile: false,
+
+
+            tag: '',
+
+            //new file
+            filename: '',
+            tags: []
         };
+
+
+        //set empty arrays rather than null
+        if (props.project.files === null)
+            this.state.project.files = [];
+        if (props.project.teams === null)
+            this.state.project.teams = [];
+        if (props.project.users === null)
+            this.state.project.users = [];
     }
 
     selectFile(file) {
-        this.setState({selectedFile: file})
+        this.setState({ selectedFile: file })
+    }
+
+    handleChange = name => event => {
+        this.setState({ [name]: event.target.value, formError: null });
+    };
+
+    handleClose = () => {
+        this.setState({ filename: '', tags: [], newFile: false });
+    };
+
+    submitFile = () => {
+        if (this.state.filename != ''){
+            //create new file and reload
+            this.setState({ filename: '', tags: [], newFile: false });
+        }
+        else {
+            this.setState({formError: true})
+        }
+    }
+
+    newFile() {
+        this.setState({ newFile: true })
+    }
+
+    addTag = () => {
+        var newtags = this.state.tags;
+        newtags.push(this.state.tag)
+        this.setState({ tags: newtags })
     }
 
     render() {
@@ -58,43 +143,116 @@ class ProjectComponent extends Component {
         const { spacing } = this.state;
 
         if (this.state.error === null) {
-            if (this.state.selectedFile === null){
-            return (
-                <div>
-                    <div className={classes.breadcrumbs}>
-                        <Paper className={classes.crumb}>
-                            <Breadcrumbs arial-label="Breadcrumb">
-                                <Link color="inherit" href="/dashboard" onClick={this.handleClick}>
+            if (this.state.selectedFile === null) {
+                return (
+                    <div>
+                        <div className={classes.breadcrumbs}>
+                            <Paper className={classes.crumb}>
+                                <Breadcrumbs arial-label="Breadcrumb">
+                                    <Link color="inherit" href="/dashboard" onClick={this.handleClick}>
                                         dashboard
                                     </Link>
-                                <Typography color="inherit">projects</Typography>
-                            </Breadcrumbs>
-                        </Paper>
-                        <br />
-                    </div>
-                <Grid id="projectGrid" container className={classes.root} spacing={16}>
-                    <div style={{ "marginLeft": "auto", "marginRight": "auto" }}>
-                        <h2>files in {this.state.project.Projectname}</h2>
-                    </div>
-                    <Grid item xs={12}>
-                        <Grid container className={classes.demo} justify="center" spacing={Number(spacing)}>
-                            {this.state.project.files.map(value => (
-                                <Grid key={value.filename} item>
-                                    <ButtonBase onClick={() => this.selectFile(value)} className={classes.btn}>
-                                        <Paper className={classes.paper}>
-                                            <Typography gutterBottom variant="display2">
-                                                {value.filename}
-                                            </Typography>
-                                        </Paper>
-                                    </ButtonBase>
+                                    <Typography color="inherit">projects</Typography>
+                                </Breadcrumbs>
+                            </Paper>
+                            <br />
+                        </div>
+                        <Grid id="projectGrid" container className={classes.root} spacing={16}>
+                            <div style={{ "marginLeft": "auto", "marginRight": "auto" }}>
+                                <h2>files in {this.state.project.Projectname}</h2>
+                            </div>
+                            <Grid item xs={12}>
+                                <Grid container className={classes.demo} justify="center" spacing={Number(spacing)}>
+                                    <Grid key="newFile" item>
+                                        <ButtonBase onClick={() => this.newFile()} className={classes.btn}>
+                                            <Paper className={classes.paper}>
+                                                <Typography gutterBottom variant="display1">
+                                                    New file
+                                                        </Typography>
+                                                <div>
+                                                    <Icon className={classes.icon} color="disabled" fontSize="large">
+                                                        add_circle
+                                                            </Icon>
+                                                </div>
+                                            </Paper>
+                                        </ButtonBase>
+                                        <Dialog
+                                            open={this.state.newFile}
+                                            onClose={this.handleClose}
+                                            aria-labelledby="form-dialog-title"
+                                            fullwidth = {true}
+                                            maxWidth = 'md'
+                                        >
+                                            <DialogTitle className={classes.title} id="form-dialog-title">New File </DialogTitle>
+                                            <DialogContent>
+
+                                                <div>
+                                                    <TextField
+                                                        error={this.state.formError}
+                                                        autoFocus
+                                                        margin="dense"
+                                                        id="filename"
+                                                        label="filename"
+                                                        type="text"
+                                                        fullwidth="true"
+                                                        onChange={this.handleChange('filename')}
+                                                    />
+                                                    <br></br>
+                                                    <List className={classes.root} subheader={<li />}>
+                                                        {['tags'].map(sectionId => (
+                                                            <li key={`section-${sectionId}`} className={classes.listSection}>
+                                                                <ul className={classes.ul}>
+                                                                    <ListSubheader>{`${sectionId}`}</ListSubheader>
+                                                                    {[this.state.tags].map(item => (
+                                                                        <ListItem  key={`tags:-${sectionId}-${item}`}>
+                                                                            <ListItemText primary={`${item}`} />
+                                                                        </ListItem>
+                                                                    ))}
+                                                                </ul>
+                                                            </li>
+                                                        ))}
+                                                    </List>
+                                                    <TextField
+                                                        autoFocus
+                                                        margin="dense"
+                                                        id="tag"
+                                                        label="tag"
+                                                        type="text"
+                                                        fullwidth="true"
+                                                        onChange={this.handleChange('tag')}
+                                                    />
+                                                    <Button onClick={this.addTag} color="primary">
+                                                        Add
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                            <DialogActions>
+                                                <Button onClick={this.handleClose} color="primary">
+                                                    Cancel
+                                                    </Button>
+                                                <Button onClick={this.submitFile} color="primary">
+                                                    Create
+                                                    </Button>
+                                            </DialogActions>
+                                        </Dialog>
+                                    </Grid>
+                                    {this.state.project.files.map(value => (
+                                        <Grid key={value.filename} item>
+                                            <ButtonBase onClick={() => this.selectFile(value)} className={classes.btn}>
+                                                <Paper className={classes.paper}>
+                                                    <Typography gutterBottom variant="display2">
+                                                        {value.filename}
+                                                    </Typography>
+                                                </Paper>
+                                            </ButtonBase>
+                                        </Grid>
+                                    ))}
                                 </Grid>
-                            ))}
+                            </Grid>
                         </Grid>
-                    </Grid>
-                </Grid>
-                </div>
-            );
-                            }
+                    </div>
+                );
+            }
             else {
                 return (
                     <FileComponent file={this.state.selectedFile} project={this.state.project} />
