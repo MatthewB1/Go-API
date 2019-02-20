@@ -19,16 +19,12 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
 
-import Avatar from '@material-ui/core/Avatar';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemText from '@material-ui/core/ListItemText';
-import PersonIcon from '@material-ui/icons/Person';
 
 import ListSubheader from '@material-ui/core/ListSubheader';
 
@@ -98,11 +94,11 @@ class ProjectComponent extends Component {
 
 
         //set empty arrays rather than null
-        if (props.project.files === null)
+        if (this.state.project.files === null)
             this.state.project.files = [];
-        if (props.project.teams === null)
+        if (this.state.project.teams === null)
             this.state.project.teams = [];
-        if (props.project.users === null)
+        if (this.state.project.users === null)
             this.state.project.users = [];
     }
 
@@ -118,10 +114,59 @@ class ProjectComponent extends Component {
         this.setState({ filename: '', tags: [], newFile: false });
     };
 
+    reloadProject = () => {
+        console.dir(this.state.project)
+        fetch('/api/projectAdministration/project?projectname=' + this.state.project.Projectname, { method: 'GET'})
+            .then(data => data.json())
+            .then(res => {
+                if (!res.Success) {
+                    alert(res.Error)
+                }
+                else {
+                    if (res.Data == null)
+                        this.setState({ filename: '', tags: [], newFile: false, project: [] });
+                    else {
+                        this.setState({ filename: '', tags: [], newFile: false, project: res.Data[0]});
+                    }
+                }
+            }
+            );
+    }
+
+    deleteProject = () => {
+        console.dir(this.state.project)
+        fetch('/api/projectAdministration/project?projectname=' + this.state.project.Projectname, { method: 'DELETE' })
+            .then(data => data.json())
+            .then(res => {
+                if (!res.Success) {
+                    alert(res.Error)
+                }
+                else {
+                    //send to dashboard
+                    window.location.reload()
+                }
+            }
+            );
+    }
+
     submitFile = () => {
-        if (this.state.filename != ''){
+        if (this.state.filename !== ''){
+            var newFile = {}
+            newFile.filename = this.state.filename
+            newFile.versions = [{lastsaved: "20/02/2019", lasteditor: {Username: this.props.username, Password: "s", AccessLevel: "s"}, totaleditTime: "123213", tags: this.state.tags}]
+            console.dir(newFile)
             //create new file and reload
-            this.setState({ filename: '', tags: [], newFile: false });
+            fetch('/api/projectAdministration/fileToProject?projectname=' + this.state.project.Projectname, { method: 'PUT', body: JSON.stringify(newFile) })
+                .then(data => data.json())
+                .then(res => {
+                    if (!res.Success) {
+                        alert(res.Error)
+                    }
+                    else {
+                        this.reloadProject()
+                    }
+                }
+                );
         }
         else {
             this.setState({formError: true})
@@ -158,6 +203,9 @@ class ProjectComponent extends Component {
                             <br />
                         </div>
                         <Grid id="projectGrid" container className={classes.root} spacing={16}>
+                            <Button variant="contained" onClick={() => this.deleteProject()} color="secondary" className={classes.button}>
+                                Delete project
+                            </Button>
                             <div style={{ "marginLeft": "auto", "marginRight": "auto" }}>
                                 <h2>files in {this.state.project.Projectname}</h2>
                             </div>

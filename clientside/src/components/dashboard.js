@@ -146,7 +146,7 @@ class DashboardComponent extends Component {
     submitProject = () => {
         console.dir(this.state)
         //fetch new project
-        if (this.state.projectname != '' &&  this.state.projectlead != null){
+        if (this.state.projectname !== '' &&  this.state.projectlead !== null){
         fetch('/api/projectAdministration/project', { method: 'POST', body: JSON.stringify({ projectname: this.state.projectname, projectlead: this.state.projectlead }) })
             .then(data => data.json())
             .then(res => {
@@ -162,9 +162,9 @@ class DashboardComponent extends Component {
             );
 
         } else {
-            if(this.state.projectlead == null)
+            if(this.state.projectlead === null)
                 alert("please select a project lead!")
-            if(this.state.projectname == '')
+            if(this.state.projectname === '')
                 alert("please provide a project name!")
         }
     };
@@ -360,7 +360,7 @@ class DashboardComponent extends Component {
                     }
                     else {
                         return (
-                            <ProjectComponent project={this.state.selectedProject} />
+                            <ProjectComponent history={this.props.history} project={this.state.selectedProject} username={this.state.username}/>
                         )
                     }
                 }

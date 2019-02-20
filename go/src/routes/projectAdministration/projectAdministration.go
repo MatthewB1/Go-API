@@ -23,6 +23,8 @@ func SubRouter(router *mux.Router) {
 	subr.HandleFunc("/addTeams", addTeams).Methods("PUT")
 	subr.HandleFunc("/addUsers", addUsers).Methods("PUT")
 
+	subr.HandleFunc("/fileToProject", addFileToProject).Methods("PUT")
+
 	subr.HandleFunc("/removeFiles", removeFiles).Methods("PUT")
 	subr.HandleFunc("/removeTeams", removeTeams).Methods("PUT")
 	subr.HandleFunc("/removeUsers", removeUsers).Methods("PUT")
@@ -30,6 +32,7 @@ func SubRouter(router *mux.Router) {
 	subr.HandleFunc("/projects", deleteProjects).Methods("DELETE")
 	subr.HandleFunc("/projects", getAll).Methods("GET")
 	subr.HandleFunc("/usersProjects", getUsersProjects).Methods("GET")
+
 }
 
 func addProject(w http.ResponseWriter, req *http.Request) {
@@ -384,4 +387,65 @@ func getUsersProjects(w http.ResponseWriter, req *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data.ProjectJson{true, response})
+}
+
+func addFileToProject(w http.ResponseWriter, req *http.Request) {
+	var requestBody map[string]interface{}
+
+	err := json.NewDecoder(req.Body).Decode(&requestBody)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
+	file, err := data.GetFile(requestBody["filename"].(string))
+
+	if file != nil {
+		utils.RespondWithError(w, errors.New("a file with filename '"+requestBody["filename"].(string)+"' already exists."))
+		return
+	}
+
+	//map[string]interface{}
+	versionsBody := requestBody["versions"]
+
+	var versions []data.Version
+	var version data.Version
+
+	var editor data.User
+	var tags []string
+
+	//iterate through all version objects
+	for _, versionBody := range versionsBody.([]interface{}) {
+
+		mapstructure.Decode(versionBody.(map[string]interface{})["lasteditor"], &editor)
+
+		for _, tag := range versionBody.(map[string]interface{})["tags"].([]interface{}) {
+			tags = append(tags, tag.(string))
+		}
+
+		version = data.Version{
+			Lastsaved:     versionBody.(map[string]interface{})["lastsaved"].(string), //time formatting ??
+			Lasteditor:    editor.Username,
+			TotaleditTime: versionBody.(map[string]interface{})["totaleditTime"].(string),
+			Tags:          tags}
+
+		versions = append(versions, version)
+		//clear slice
+		tags = nil
+	}
+
+	file = &data.File{
+		Filename: requestBody["filename"].(string),
+		Versions: versions}
+
+	err = data.AddFile(file)
+	if err != nil {
+		utils.RespondWithError(w, err)
+		return
+	}
+
+	err = data.AddFiles(req.FormValue("projectname"), &[]string{file.Filename})
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data.Json{true})
+
 }
