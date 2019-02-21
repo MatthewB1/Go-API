@@ -120,10 +120,7 @@ func addFileVersion(w http.ResponseWriter, req *http.Request) {
 
 	versionBody := requestBody["version"]
 
-	var editor data.User
 	var tags []string
-
-	mapstructure.Decode(versionBody.(map[string]interface{})["lasteditor"], &editor)
 
 	for _, tag := range versionBody.(map[string]interface{})["tags"].([]interface{}) {
 		tags = append(tags, tag.(string))
@@ -131,7 +128,7 @@ func addFileVersion(w http.ResponseWriter, req *http.Request) {
 
 	version := &data.Version{
 		Lastsaved:     versionBody.(map[string]interface{})["lastsaved"].(string), //time formatting ??
-		Lasteditor:    editor.Username,
+		Lasteditor:    versionBody.(map[string]interface{})["lasteditor"].(string),
 		TotaleditTime: versionBody.(map[string]interface{})["totaleditTime"].(string),
 		Tags:          tags}
 

@@ -77,6 +77,7 @@ class ProjectComponent extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            username: props.username,
             spacing: '16',
             error: null,
             formError: null,
@@ -92,6 +93,7 @@ class ProjectComponent extends Component {
             tags: []
         };
 
+        console.log(this.state.username)
 
         //set empty arrays rather than null
         if (this.state.project.files === null)
@@ -101,6 +103,34 @@ class ProjectComponent extends Component {
         if (this.state.project.users === null)
             this.state.project.users = [];
     }
+
+    componentDidMount() {
+        //reloads project data upon mount
+        fetch('/api/projectAdministration/project?projectname=' + this.state.project.Projectname, { method: 'GET' })
+            .then(data => data.json())
+            .then(res => {
+                if (res.Success) {
+                    if (res.Data == null)
+                        this.setState({ project: null })
+                    else{
+                        
+                        if (res.Data[0].files === null)
+                            res.Data[0].files = [];
+                        if (res.Data[0].teams === null)
+                            res.Data[0].teams = [];
+                        if (res.Data[0].users === null)
+                            res.Data[0].users = [];
+
+                        this.setState({ project: res.Data[0] });
+                    }
+                }
+                else {
+                    this.setState({ error: res.Error });
+                }
+            }
+            );
+    }
+    
 
     selectFile(file) {
         this.setState({ selectedFile: file })
@@ -303,7 +333,7 @@ class ProjectComponent extends Component {
             }
             else {
                 return (
-                    <FileComponent file={this.state.selectedFile} project={this.state.project} />
+                    <FileComponent file={this.state.selectedFile} project={this.state.project} username={this.state.username} />
                 )
             }
         }
