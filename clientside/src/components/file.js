@@ -66,15 +66,15 @@ class FileComponent extends Component {
             username: props.username,
             error: null,
             file: props.file,
-            initialLength: props.file.versions[0].tags.length,
+            initialLength: 0,
             project: props.project,
             selectedFile: null,
 
 
-            
+
             newVersion: false,
             tag: '',
-            tags: props.file.versions[props.file.versions.length - 1].tags,
+            tags: [],
             formError: null
         };
 
@@ -83,18 +83,26 @@ class FileComponent extends Component {
 
 
         this.state.file.versions = this.state.file.versions.reverse()
+        this.state.tags = this.state.file.versions[0].tags
+
+        if (this.state.tags === null) {
+            this.state.tags = []
+            this.state.initialLength = 0
+        } else {
+            this.state.initialLength = this.state.tags.length
+        }
 
         console.log(this.state.username)
     }
 
 
     handleClick() {
-        this.setState({file: null})
+        this.setState({ file: null })
     }
 
     deleteFile = () => {
 
-        var body= {
+        var body = {
             projectname: this.state.project.Projectname,
             files: [this.state.file]
         }
@@ -108,7 +116,7 @@ class FileComponent extends Component {
                 }
                 else {
                     //send to dashboard
-                    this.setState({file: null})
+                    this.setState({ file: null })
                 }
             }
             );
@@ -119,16 +127,18 @@ class FileComponent extends Component {
         this.setState({ newVersion: true })
     }
 
-    lockFile(){
+    lockFile() {
         //would hit db and lock the file, anyone trying to edit would be told they can't
     }
 
-    unlockFile(){
+    unlockFile() {
 
     }
 
     submitVersion = () => {
         if (this.state.tags.length > this.state.initialLength) {
+
+            if (typeof this.state.username !== 'undefined'){
             var newVersion = {
                 filename: this.state.file.filename,
                 version: {
@@ -138,7 +148,18 @@ class FileComponent extends Component {
                     tags: this.state.tags
                 }
             }
-             console.dir(newVersion)
+        }else {
+                var newVersion = {
+                    filename: this.state.file.filename,
+                    version: {
+                        lastsaved: this.state.file.versions[0].lastsaved + "1",
+                        lasteditor: "",
+                        totaleditTime: this.state.file.versions[0].totaleditTime + "2",
+                        tags: this.state.tags
+                    }
+                }
+        }
+            console.dir(newVersion)
             // add file version
             fetch('/api/fileAdministration/addFileVersion', { method: 'PUT', body: JSON.stringify(newVersion) })
                 .then(data => data.json())
@@ -166,10 +187,10 @@ class FileComponent extends Component {
                 }
                 else {
                     if (res.Data == null)
-                        this.setState({newVersion: false, file: {filename: this.state.file.filename, versions: []}, tags: [] });
+                        this.setState({ newVersion: false, file: { filename: this.state.file.filename, versions: [] }, tags: [] });
                     else {
                         res.Data[0].versions = res.Data[0].versions.reverse()
-                        this.setState({ newVersion: false, file: res.Data[0], tags: res.Data[0].versions[0].tags});
+                        this.setState({ newVersion: false, file: res.Data[0], tags: res.Data[0].versions[0].tags });
                     }
                 }
             }
@@ -181,7 +202,7 @@ class FileComponent extends Component {
     };
 
     handleClose = () => {
-        this.setState({newVersion: false });
+        this.setState({ newVersion: false });
         this.unlockFile();
     };
 
@@ -192,11 +213,13 @@ class FileComponent extends Component {
     }
 
 
-    formatTags(tags){
+    formatTags(tags) {
         var tagstr = ""
 
-        for (var i = 0; i < tags.length; i++){
-            tagstr += tags[i] + ", "
+        if (tags !== null) {
+            for (var i = 0; i < tags.length; i++) {
+                tagstr += tags[i] + ", "
+            }
         }
 
         return tagstr
@@ -216,7 +239,7 @@ class FileComponent extends Component {
                                     <Link color="inherit" href="/dashboard">
                                         dashboard
                                     </Link>
-                                    <Link style={{"cursor":"pointer"}} color="inherit" onClick={() => this.handleClick()}>
+                                    <Link style={{ "cursor": "pointer" }} color="inherit" onClick={() => this.handleClick()}>
                                         projects
                                     </Link>
                                     <Typography color="inherit">{this.state.file.filename}</Typography>
@@ -293,11 +316,11 @@ class FileComponent extends Component {
                                     </ExpansionPanelDetails>
                                 </ExpansionPanel>
                             ))}
-                            
+
                         </div>
 
-                                <br></br>
-                                <br></br>
+                        <br></br>
+                        <br></br>
                         <Button style={{ "width": "auto" }} variant="contained" onClick={() => this.deleteFile()} color="secondary" className={classes.button}>
                             Remove file from project
                         </Button>

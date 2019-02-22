@@ -183,7 +183,7 @@ class ProjectComponent extends Component {
         if (this.state.filename !== ''){
             var newFile = {}
             newFile.filename = this.state.filename
-            newFile.versions = [{lastsaved: "20/02/2019", lasteditor: {Username: this.props.username, Password: "s", AccessLevel: "s"}, totaleditTime: "123213", tags: this.state.tags}]
+            newFile.versions = [{lastsaved: "20/02/2019", lasteditor: this.state.username, totaleditTime: "123213", tags: this.state.tags}]
             console.dir(newFile)
             //create new file and reload
             fetch('/api/projectAdministration/fileToProject?projectname=' + this.state.project.Projectname, { method: 'PUT', body: JSON.stringify(newFile) })
